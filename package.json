@@ -1,0 +1,60 @@
+{
+  "name": "@antelopejs/data-api",
+  "version": "0.0.1",
+  "description": "A flexible DataAPI interface for antelopejs that uses the API interface",
+  "keywords": [
+    "antelopejs",
+    "data-api",
+    "rest",
+    "api",
+    "database"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AntelopeJS/data-api.git"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.6.5",
+  "scripts": {
+    "dev": "ajs project run -w -p playground",
+    "build": "tsc",
+    "prepack": "pnpm run build",
+    "release": "pnpm run lint && pnpm run test && pnpm run prepack && release-it",
+    "format": "prettier --write .",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "echo \"No test specified\""
+  },
+  "antelopeJs": {
+    "exportsPath": "dist/interfaces",
+    "imports": [
+      "api@beta",
+      "database@beta",
+      "database-decorators@beta",
+      "core@beta"
+    ],
+    "importsOptional": []
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.25.0",
+    "@release-it/conventional-changelog": "^10.0.1",
+    "@types/node": "^22.14.1",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "release-it": "^19.0.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.30.1"
+  }
+}

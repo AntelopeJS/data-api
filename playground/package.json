@@ -1,0 +1,36 @@
+{
+  "name": "playground",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ajs project run -w",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.7",
+    "@types/randomstring": "^1.3.0",
+    "mongodb": "^6.16.0",
+    "prettier": "^2.6.1",
+    "randomstring": "^1.3.1",
+    "typescript": "^5.8.3"
+  },
+  "antelopeJs": {
+    "imports": [
+      "api@beta",
+      "core@beta",
+      "data-api@beta",
+      "database-decorators@beta",
+      "database@beta",
+      "logging@beta"
+    ],
+    "baseUrl": "dist",
+    "paths": {
+      "@/*": [
+        "*"
+      ]
+    }
+  },
+  "dependencies": {
+    "uuid": "^11.1.0"
+  }
+}

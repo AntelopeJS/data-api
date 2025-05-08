@@ -1,0 +1,62 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "modules": {
+    "playground": {
+      "source": {
+        "type": "local",
+        "path": ".",
+        "installCommand": "npx tsc"
+      }
+    },
+    "data-api": {
+      "source": {
+        "type": "local",
+        "path": "..",
+        "installCommand": ["npx tsc"]
+      }
+    },
+    "api": {
+      "source": {
+        "type": "git",
+        "remote": "git@github.com:AntelopeJS/api-new.git",
+        "branch": "main",
+        "installCommand": ["pnpm i", "npx tsc"]
+      },
+      "config": {
+        "servers": [
+          {
+            "protocol": "http",
+            "port": "5010"
+          }
+        ],
+        "cors": {
+          "allowedOrigins": ["http://localhost:3000", "http://127.0.0.1:3000"]
+        }
+      }
+    },
+    "mongodb": {
+      "source": {
+        "type": "git",
+        "remote": "git@github.com:AntelopeJS/mongodb.git",
+        "branch": "dev",
+        "installCommand": ["pnpm i", "npx tsc"]
+      },
+      "config": {
+        "url": "mongodb://localhost:27017"
+      }
+    },
+    "database-decorators": {
+      "source": {
+        "type": "git",
+        "remote": "git@github.com:AntelopeJS/database-decorators.git",
+        "installCommand": ["pnpm i", "npx tsc"]
+      }
+    }
+  },
+  "envOverrides": {
+    "JWT_SECRET": "modules.auth-jwt.config.secret"
+  }
+}

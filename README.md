@@ -8,13 +8,20 @@
 
 A module that provides data-api interfaces only, without implementation code.
 
-For detailed documentation on the Data-Api interface, please refer to the [docs](https://github.com/AntelopeJS/interface-data-api).
 
 ## Installation
 
 ```bash
 ajs project modules add @antelopejs/data-api
 ```
+
+## Interfaces
+
+This module implements the Data API interface it provides a standardized way to interact with data sources in your application. The interface is installed separately to maintain modularity and minimize dependencies.
+
+| Name          | Install command                         |            |
+| ------------- | --------------------------------------- | ---------- |
+| Data API      | `ajs module imports add data-api`       | [Documentation](https://github.com/AntelopeJS/interface-data-api) |
 
 ## License
 

@@ -20,6 +20,11 @@
     "baseUrl": "src",
     "paths": {
       "@ajs.local/*": ["interfaces/*"],
+      "@ajs/data-api/*": ["../../.antelope/output/data-api/*"],
+      "@ajs/core/*": ["../../.antelope/interfaces.d/core/*"],
+      "@ajs/api/*": ["../../.antelope/interfaces.d/api/*"],
+      "@ajs/database/*": ["../../.antelope/interfaces.d/database/*"],
+      "@ajs/database-decorators/*": ["../../.antelope/interfaces.d/database-decorators/*"],
       "@ajs/*": ["../.antelope/interfaces.d/*"]
     }
   },

@@ -16,11 +16,26 @@
   },
   "antelopeJs": {
     "imports": [
-      "api@beta",
-      "core@beta",
-      "data-api@beta",
-      "database-decorators@beta",
-      "database@beta",
+      {
+        "name": "api@beta",
+        "skipInstall": true
+      },
+      {
+        "name": "core@beta",
+        "skipInstall": true
+      },
+      {
+        "name": "data-api@beta",
+        "skipInstall": true
+      },
+      {
+        "name": "database-decorators@beta",
+        "skipInstall": true
+      },
+      {
+        "name": "database@beta",
+        "skipInstall": true
+      },
       "logging@beta"
     ],
     "baseUrl": "dist",
@@ -28,7 +43,8 @@
       "@/*": [
         "*"
       ]
-    }
+    },
+    "importsOptional": []
   },
   "dependencies": {
     "uuid": "^11.1.0"

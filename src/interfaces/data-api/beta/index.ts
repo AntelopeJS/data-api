@@ -2,8 +2,10 @@ import { GetMetadata } from '@ajs/core/beta';
 import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/decorators';
 import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
 import { Datum, ValueProxy } from '@ajs/database/beta';
+import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/beta/schema';
 import { DataAPIMeta } from './metadata';
 import { assert, Parameters, Query, Validation } from './components';
+import assert_ from 'assert';
 
 export type DataControllerCallback<O = any> = {
   args: (ParameterDecorator | ParameterDecorator[])[];
@@ -20,8 +22,8 @@ export type DataControllerCallbackWithOptions<O = any> = {
 export type ExtractCallback<T> = T extends DataControllerCallbackWithOptions
   ? T['callback']['func']
   : T extends DataControllerCallback
-    ? T['func']
-    : never;
+  ? T['func']
+  : never;
 
 export type DataControllerDef = {
   [name: string]: DataControllerCallback | DataControllerCallbackWithOptions;
@@ -31,19 +33,31 @@ export type ExtractDefCallbacks<T extends {}> = {
   [K in keyof T]: ExtractCallback<T[K]>;
 };
 
-abstract class TableHolder<C> {
-  table!: C;
+abstract class TableHolder<C extends Class> {
+  table!: InstanceType<C>;
 }
 
 export function DataController<
   C extends Class,
   P extends DataControllerDef = DataControllerDef,
   Base extends ControllerClass = ControllerClass,
->(_tableClass: C, def: P, base: Base): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
+>(tableClass: C, def: P, base: Base, schemaName?: string): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
   const c = class extends base {
     table!: InstanceType<C>;
   };
   const meta = GetMetadata(c, DataAPIMeta);
+
+  const databaseSchema = GetTablesFromSchema(schemaName || String(DEFAULT_SCHEMA));
+  assert_(databaseSchema, 'Non-existent Database Schema');
+
+  const tableName = Object.entries(databaseSchema)
+    .filter(([, table]) => table === tableClass)
+    .map(([name]) => name)[0];
+  assert_(tableName, 'Unregistered Database Table');
+
+  meta.tableClass = tableClass;
+  meta.tableName = tableName;
+
   for (const [key, val] of Object.entries(def)) {
     const entry = 'func' in val ? { endpoint: key, callback: val } : { endpoint: key, ...val };
     meta.addEndpoint(key, entry);

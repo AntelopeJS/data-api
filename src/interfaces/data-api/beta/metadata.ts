@@ -100,6 +100,16 @@ export class DataAPIMeta {
   public modelKey?: string;
 
   /**
+   * Database Schema class.
+   */
+  public tableClass!: Class;
+
+  /**
+   * Database Schema table name.
+   */
+  public tableName!: string;
+
+  /**
    * Readable fields.
    */
   public readonly readable: Record<'getters' | 'props', [string, FieldData][]> = {

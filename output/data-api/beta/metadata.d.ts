@@ -82,6 +82,14 @@ export declare class DataAPIMeta {
      */
     modelKey?: string;
     /**
+     * Database Schema class.
+     */
+    tableClass: Class;
+    /**
+     * Database Schema table name.
+     */
+    tableName: string;
+    /**
      * Readable fields.
      */
     readonly readable: Record<'getters' | 'props', [string, FieldData][]>;

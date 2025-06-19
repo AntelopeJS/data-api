@@ -19,10 +19,10 @@ export type DataControllerDef = {
 export type ExtractDefCallbacks<T extends {}> = {
     [K in keyof T]: ExtractCallback<T[K]>;
 };
-declare abstract class TableHolder<C> {
-    table: C;
+declare abstract class TableHolder<C extends Class> {
+    table: InstanceType<C>;
 }
-export declare function DataController<C extends Class, P extends DataControllerDef = DataControllerDef, Base extends ControllerClass = ControllerClass>(_tableClass: C, def: P, base: Base): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base;
+export declare function DataController<C extends Class, P extends DataControllerDef = DataControllerDef, Base extends ControllerClass = ControllerClass>(tableClass: C, def: P, base: Base, schemaName?: string): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base;
 export declare const RegisterDataController: () => import("@ajs/core/beta/decorators").ClassDecorator<Class<any, any[]>>;
 export declare function GetDataControllerMeta(thisObj: any): DataAPIMeta;
 export declare namespace DefaultRoutes {

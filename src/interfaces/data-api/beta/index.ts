@@ -22,8 +22,8 @@ export type DataControllerCallbackWithOptions<O = any> = {
 export type ExtractCallback<T> = T extends DataControllerCallbackWithOptions
   ? T['callback']['func']
   : T extends DataControllerCallback
-  ? T['func']
-  : never;
+    ? T['func']
+    : never;
 
 export type DataControllerDef = {
   [name: string]: DataControllerCallback | DataControllerCallbackWithOptions;

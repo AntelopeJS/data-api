@@ -153,6 +153,8 @@ export class DataAPIMeta {
     merge(parent.readable, this.readable);
     merge(parent.writable, this.writable);
     merge(parent.endpoints, this.endpoints);
+    this.tableClass = parent.tableClass;
+    this.tableName = parent.tableName;
   }
 
   private field(name: string) {

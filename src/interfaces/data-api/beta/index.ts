@@ -133,6 +133,7 @@ export namespace DefaultRoutes {
       let [query, queryTotal] = Query.List(this, meta, model.table, reqCtx, sort, params?.filters);
 
       const pluck: Set<string> | undefined = meta.pluck[params.pluckMode ?? 'list'];
+      assert(params.noPluck || pluck, `No fields found for pluckMode '${params.pluckMode ?? 'list'}'`);
 
       if (!params.noForeign) {
         query = query.map((val) =>

@@ -3,6 +3,7 @@ import { Class, MakeMethodAndPropertyDecorator, MakePropertyDecorator } from '@a
 import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
+import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
 
 /**
  * Field access mode enum.
@@ -100,6 +101,11 @@ export class DataAPIMeta {
   public modelKey?: string;
 
   /**
+   * Keys of the DataAPI class containing database modifier keys.
+   */
+  public modifierKeys = new Map<typeof ContainerModifier<any>, string>();
+
+  /**
    * Database Schema class.
    */
   public tableClass!: Class;
@@ -147,8 +153,13 @@ export class DataAPIMeta {
     for (const [key, list] of Object.entries(parent.pluck)) {
       this.pluck[key] = new Set(list);
     }
-    if (!('tableKey' in this)) {
+    if (!('modelKey' in this)) {
       this.modelKey = parent.modelKey;
+    }
+    for (const key of parent.modifierKeys.keys()) {
+      if (!this.modifierKeys.has(key)) {
+        this.modifierKeys.set(key, parent.modifierKeys.get(key)!);
+      }
     }
     merge(parent.readable, this.readable);
     merge(parent.writable, this.writable);
@@ -313,6 +324,18 @@ export class DataAPIMeta {
     return this;
   }
 
+
+  /**
+   * Sets the key containing the key for the given database modifier.
+   *
+   * @param name Field name
+   * @param modifierClass Modifier
+   */
+  public setModifierKey(name: string, modifierClass: typeof ContainerModifier<any>) {
+    this.modifierKeys.set(modifierClass, name);
+    return this;
+  }
+
   /**
    * Adds the given endpoint to the DataAPI
    *
@@ -453,4 +476,11 @@ export const ModelReference = MakePropertyDecorator((target, key) => {
   GetMetadata(target.constructor, DataAPIMeta).setModelKey(key as string);
 });
 
-// Validator
+/**
+ * Sets which field will contain the key for the given database modifier.
+ * 
+ * @param modifierClass Modifier
+ */
+export const ModifierKey = MakePropertyDecorator((target, key, modifierClass: typeof ContainerModifier<any>) => {
+  GetMetadata(target.constructor, DataAPIMeta).setModifierKey(key as string, modifierClass);
+})

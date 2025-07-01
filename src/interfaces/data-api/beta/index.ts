@@ -115,6 +115,7 @@ export namespace DefaultRoutes {
 
       const dbResult = model.constructor.fromDatabase(await query);
       assert(dbResult, 'Not Found', 404);
+      Validation.Unlock(this, meta, dbResult);
 
       const results = await Query.ReadProperties(this, meta, dbResult);
 
@@ -157,7 +158,10 @@ export namespace DefaultRoutes {
       const [dbResult, dbTotal] = await Promise.all([queryPaged, queryTotal]);
 
       const results = await Promise.all(
-        dbResult.map((entry) => Query.ReadProperties(this, meta, model.constructor.fromDatabase(entry))),
+        dbResult.map((entry) => {
+          Validation.Unlock(this, meta, entry);
+          return Query.ReadProperties(this, meta, model.constructor.fromDatabase(entry))
+        }),
       );
 
       Validation.ClearInternal(meta, results);
@@ -178,6 +182,7 @@ export namespace DefaultRoutes {
         Validation.MandatoryFields(meta, data, 'new');
       }
       Validation.ValidateTypes(meta, data);
+      Validation.Lock(this, meta, data);
 
       const dbData = await Query.WriteProperties(this, meta, data);
 
@@ -195,6 +200,7 @@ export namespace DefaultRoutes {
         Validation.MandatoryFields(meta, data, 'edit');
       }
       Validation.ValidateTypes(meta, data);
+      Validation.Lock(this, meta, data);
 
       const model = Query.GetModel(this, meta);
 

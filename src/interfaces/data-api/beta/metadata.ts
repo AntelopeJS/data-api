@@ -62,16 +62,18 @@ export interface FieldData {
 }
 
 type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
-export type FilterValue = [value: any, mode: Comparison];
+export type FilterValue = [value: string, mode: Comparison];
 
 /**
  * Filter callback.
  */
-export type FilterFunction<T extends Record<string, any>, U = any> = (
+export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (
   context: RequestContext & { this: T },
-  row: ValueProxy.Proxy<U>,
+  proxy: ValueProxy.Proxy<any>,
   key: string,
-  ...args: FilterValue
+  value: FilterValue[0],
+  mode: FilterValue[1],
+  row: ValueProxy.Proxy<U>
 ) => ValueProxy.ProxyOrVal<boolean>;
 
 /**
@@ -449,21 +451,20 @@ export const Filter: <T extends Record<string, any>>(
   GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
     key as string,
     func ||
-      ((_context, row, key, val, mode) => {
-        const dbVal = row(key) as ValueProxy.Proxy<number>;
+      ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
         switch (mode) {
           case 'ne':
-            return dbVal.ne(val);
+            return proxy.ne(val);
           case 'gt':
-            return dbVal.gt(val);
+            return proxy.gt(val);
           case 'ge':
-            return dbVal.ge(val);
+            return proxy.ge(val);
           case 'lt':
-            return dbVal.lt(val);
+            return proxy.lt(val);
           case 'le':
-            return dbVal.le(val);
+            return proxy.le(val);
           default:
-            return dbVal.eq(val);
+            return proxy.eq(val);
         }
       }),
   );

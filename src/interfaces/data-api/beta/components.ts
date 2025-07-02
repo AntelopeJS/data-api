@@ -277,9 +277,11 @@ export namespace Query {
           req.filter((row) =>
             filter(
               Object.assign(reqCtx, { this: obj }),
-              row as ValueProxy.Proxy<Record<string, any>>,
+              Validation.UnlockRequest(obj, meta, row, name),
               name,
-              ...filters![name],
+              filters![name][0],
+              filters![name][1],
+              row as ValueProxy.Proxy<Record<string, any>>,
             ),
           ),
         tmpRequest,
@@ -325,7 +327,7 @@ export namespace Validation {
     }
   }
 
-  export function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, field: K, row: ValueProxy.Proxy<T>): ValueProxy.Proxy<T[K]> {
+  export function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, row: ValueProxy.Proxy<T>, field: K): ValueProxy.Proxy<T[K]> {
     const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({modifier, args: [obj[field]]}));
     return unlockrequest(meta.tableClass as Constructible<T>, row, field, modifiers);
   }

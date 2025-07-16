@@ -16,9 +16,12 @@ module.exports.setup = async function () {
       },
       mongodb: {
         source: {
-          type: 'git',
-          remote: 'git@github.com:AntelopeJS/mongodb.git',
-          branch: 'main',
+          // type: 'git',
+          // remote: 'git@github.com:AntelopeJS/mongodb.git',
+          // branch: 'main',
+          // installCommand: ['pnpm i', 'npx tsc'],
+          type: 'local',
+          path: '~/projects/antelopejs/mongodb',
           installCommand: ['pnpm i', 'npx tsc'],
         },
         config: {

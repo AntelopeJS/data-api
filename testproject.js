@@ -26,6 +26,7 @@ module.exports.setup = async function () {
         },
         config: {
           url: mongod.getUri(),
+          // url: 'mongodb://localhost:27017',
         },
       },
       database_decorators: {

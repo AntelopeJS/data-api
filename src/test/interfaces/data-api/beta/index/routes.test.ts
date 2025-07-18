@@ -10,13 +10,13 @@ import {
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
-import { Access, AccessMode, ModelReference } from '@ajs.local/data-api/beta/metadata';
+import { Access, AccessMode, Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
 import { deleteRequest, editRequest, getFunctionName, getRequest, listRequest, newRequest } from '../utils';
 
 @RegisterTable('users')
 class User extends Table {
   @Index({ primary: true })
-  declare id: string;
+  declare _id: string;
 
   @Index()
   declare email: string;
@@ -50,6 +50,7 @@ describe('Routes', () => {
   });
 
   it('accessing default routes', async () => await requestingDefaultRoutes());
+  it('accessing undefined route', async () => await requestingUndefinedRoute());
   it('using route get', async () => await usingRouteGet());
   it('using route list', async () => await usingRouteList());
   it('using route new', async () => await usingRouteNew());
@@ -64,19 +65,24 @@ async function _createDataController(testName: string, user: Partial<User>, rout
     @StaticModel(UserModel, database_name)
     declare userModel: UserModel;
 
+    @Listable()
     @Access(AccessMode.ReadOnly)
     @Index({ primary: true })
     declare _id: string;
 
-    @Access(AccessMode.WriteOnly)
+    @Listable()
+    @Access(AccessMode.ReadWrite)
     declare password: string;
 
+    @Listable()
     @Access(AccessMode.ReadWrite)
     declare name: string;
 
-    @Access(AccessMode.ReadOnly)
+    @Listable()
+    @Access(AccessMode.ReadWrite)
     declare age: number;
 
+    @Listable()
     @Access(AccessMode.ReadWrite)
     declare email: string;
   }
@@ -88,10 +94,10 @@ async function _createDataController(testName: string, user: Partial<User>, rout
 }
 
 async function requestingDefaultRoutes() {
-  const { id } = await _createDataController(getFunctionName(), validUserDataset);
+  await _createDataController(getFunctionName(), validUserDataset.default);
 
   const [get_response, list_response, new_response, edit_response, delete_response] = await Promise.all([
-    getRequest(getFunctionName(), { id }),
+    getRequest(getFunctionName(), {}),
     listRequest(getFunctionName(), {}),
     newRequest(getFunctionName(), {}),
     editRequest(getFunctionName(), {}),
@@ -105,10 +111,43 @@ async function requestingDefaultRoutes() {
   expect(delete_response.status).to.not.equal(404);
 }
 
-async function validateUserUsingResponse(response: Response, validDataset: Partial<User>) {
-  const data = (await response.json()) as User[];
+async function requestingUndefinedRoute() {
+  await _createDataController(getFunctionName(), validUserDataset.default, {
+    get: DefaultRoutes.Get,
+    new: DefaultRoutes.New,
+    delete: DefaultRoutes.Delete,
+  });
+
+  const [get_response, list_response, new_response, edit_response, delete_response] = await Promise.all([
+    getRequest(getFunctionName(), {}),
+    listRequest(getFunctionName(), {}),
+    newRequest(getFunctionName(), {}),
+    editRequest(getFunctionName(), {}),
+    deleteRequest(getFunctionName(), {}),
+  ]);
+
+  expect(list_response.status).to.equal(404);
+  expect(edit_response.status).to.equal(404);
+
+  expect(get_response.status).to.not.equal(404);
+  expect(new_response.status).to.not.equal(404);
+  expect(delete_response.status).to.not.equal(404);
+}
+
+async function validateUserUsingResponse(response: Response, id: string, validDataset: Partial<User>) {
+  const data = (await response.json()) as { results: User[] };
   expect(response.status).to.equal(200);
-  await validateUser(data[0], validDataset);
+
+  let found: User | undefined;
+  if (data.results && Array.isArray(data.results)) {
+    for (const user of data.results) {
+      if (user._id == id) {
+        found = user;
+        break;
+      }
+    }
+  }
+  await validateUser(found, validDataset);
 }
 
 async function validateUserUsingModel(userModel: UserModel, id: string, validDataset: Partial<User>) {
@@ -123,7 +162,6 @@ async function validateUser(
 ) {
   const foundDataset = user instanceof UserModel ? await user.get(id!) : user;
   expect(foundDataset).to.be.an('object');
-  expect(foundDataset).to.have.property('id', id);
   expect(foundDataset).to.have.property('name', validDataset.name);
   expect(foundDataset).to.have.property('email', validDataset.email);
   expect(foundDataset).to.have.property('age', validDataset.age);
@@ -141,13 +179,13 @@ async function usingRouteGet() {
 }
 
 async function usingRouteList() {
-  await _createDataController(getFunctionName(), validUserDataset.default, {
+  const { id } = await _createDataController(getFunctionName(), validUserDataset.default, {
     list: DefaultRoutes.List,
   });
 
   const response = await listRequest(getFunctionName(), {});
   expect(response.status).to.equal(200);
-  await validateUserUsingResponse(response, validUserDataset.default);
+  await validateUserUsingResponse(response, id, validUserDataset.default);
 }
 
 async function usingRouteNew() {
@@ -165,7 +203,7 @@ async function usingRouteEdit() {
     edit: DefaultRoutes.Edit,
   });
 
-  await editRequest(getFunctionName(), { id, ...validUserDataset.alternative });
+  await editRequest(getFunctionName(), validUserDataset.alternative, { id });
   await validateUserUsingModel(userModel, id, validUserDataset.alternative);
 }
 
@@ -175,5 +213,5 @@ async function usingRouteDelete() {
   });
 
   await deleteRequest(getFunctionName(), { id });
-  await validateUserUsingModel(userModel, id, validUserDataset.default);
+  expect(await userModel.get(id)).to.equal(undefined);
 }

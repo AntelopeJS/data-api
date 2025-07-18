@@ -11,7 +11,6 @@ import {
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { URL_BASE } from '../constants';
 import { getFunctionName, listRequest } from '../utils';
 
 @RegisterTable('products')
@@ -182,7 +181,6 @@ async function listFrom2ndPage() {
     offset: number;
     limit: number;
   };
-  console.log(data);
   expect(data.results).to.have.length(1);
   expect(data.total).to.equal(defaultProductDataset.length);
   expect(data.offset).to.equal(2);
@@ -245,7 +243,6 @@ async function sortByNameAscending() {
   await _createDataController(getFunctionName(), defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'name', sortDirection: 'asc' });
-  console.log(response);
   expect(response.status).to.equal(200);
   const data = (await response.json()) as {
     results: Record<string, unknown>[];

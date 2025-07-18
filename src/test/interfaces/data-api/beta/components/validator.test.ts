@@ -42,15 +42,13 @@ let validProductData = {
 };
 
 describe('Field Validator', () => {
-  after(async () => {
-    await DeleteDatabase(database_name);
-  });
-
   it('validate correct parameters', async () => await validateCorrectParameters());
   // it('validate incorrect date parameter', async () => await validateIncorrectDateParameter());
   // it('validate incorrect regex parameter', async () => await validateIncorrectEmailParameter());
   // it('validate incorrect string parameter', async () => await validateIncorrectStringParameter());
   // it('validate incorrect number parameter', async () => await validateIncorrectNumberParameter());
+
+  after(async () => await DeleteDatabase(database_name));
 });
 
 async function _createDataController(testName: string, product?: Partial<Product>) {

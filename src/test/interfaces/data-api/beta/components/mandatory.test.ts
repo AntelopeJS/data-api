@@ -51,15 +51,13 @@ const validOrderDataset: Record<string, Partial<Order>> = {
 };
 
 describe('Field Mandatory', () => {
-  after(async () => {
-    await DeleteDatabase(database_name);
-  });
-
   it('new row with all mandatory fields', async () => await newWithAllMandatoryFields());
   it('new row with missing mandatory fields', async () => await newWithMissingMandatoryFields());
   it('edit row with all mandatory fields', async () => await editWithAllMandatoryFields());
   it('edit row with missing mandatory fields', async () => await editWithMissingMandatoryFields());
   it('skip mandatory validation when noMandatory is true', async () => await skipMandatoryValidationWhenNoMandatory());
+
+  after(async () => await DeleteDatabase(database_name));
 });
 
 async function _createDataController(testName: string, order?: Partial<Order>) {

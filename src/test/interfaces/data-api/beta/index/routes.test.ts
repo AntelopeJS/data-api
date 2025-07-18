@@ -45,10 +45,6 @@ const validUserDataset: Record<string, Partial<User>> = {
 };
 
 describe('Routes', () => {
-  after(async () => {
-    await DeleteDatabase(database_name);
-  });
-
   it('accessing default routes', async () => await requestingDefaultRoutes());
   it('accessing undefined route', async () => await requestingUndefinedRoute());
   it('using route get', async () => await usingRouteGet());
@@ -56,6 +52,8 @@ describe('Routes', () => {
   it('using route new', async () => await usingRouteNew());
   it('using route edit', async () => await usingRouteEdit());
   it('using route delete', async () => await usingRouteDelete());
+
+  after(async () => await DeleteDatabase(database_name));
 });
 
 async function _createDataController(testName: string, user: Partial<User>, routes?: any) {

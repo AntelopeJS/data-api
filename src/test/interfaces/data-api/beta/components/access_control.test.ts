@@ -37,16 +37,14 @@ const defaultUserDataset: Partial<User> = {
 };
 
 describe('Field Access Control', () => {
-  after(async () => {
-    await DeleteDatabase(database_name);
-  });
-
   it('read in a read write field', async () => await readInReadWriteField());
   it('write in a read write field', async () => await writeInReadWriteField());
   it('read in a write only field', async () => await readInWriteOnlyField());
   it('write in a read only field', async () => await writeInReadOnlyField());
   it('read in a read only field', async () => await readInReadOnlyField());
   it('write in a write only field', async () => await writeInWriteOnlyField());
+
+  after(async () => await DeleteDatabase(database_name));
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {

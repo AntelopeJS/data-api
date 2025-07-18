@@ -62,10 +62,6 @@ const defaultProductDataset: Partial<Product>[] = [
 ];
 
 describe('Field Listable', () => {
-  after(async () => {
-    await DeleteDatabase(database_name);
-  });
-
   it('default listing', async () => await defaultListing());
   it('list only detailed fields', async () => await listOnlyDetailedFields());
   it('list only 2 rows per page', async () => await listOnly2RowsPerPage());
@@ -78,6 +74,8 @@ describe('Field Listable', () => {
   it('sorting by number (price), descending', async () => await sortByPriceDescending());
   it('sorting by date (addedAt), ascending', async () => await sortByAddedAtAscending());
   it('sorting by date (addedAt), descending', async () => await sortByAddedAtDescending());
+
+  after(async () => await DeleteDatabase(database_name));
 });
 
 async function _createDataController(testName: string, product: Partial<Product>[]) {

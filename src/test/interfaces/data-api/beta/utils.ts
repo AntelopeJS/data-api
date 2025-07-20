@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { URL_BASE } from './constants';
 
 export function getFunctionName(): string {
@@ -42,4 +43,26 @@ export async function editRequest(functionName: string, payload: unknown, queryP
 
 export async function deleteRequest(functionName: string, queryParams?: Record<string, string>) {
   return await _request(functionName, 'delete', 'DELETE', undefined, queryParams);
+}
+
+export async function validateObject<T>(object: T, expectedObject: Partial<T>, fieldsToCheck: (keyof T)[]) {
+  for (const field of fieldsToCheck) {
+    expect(object[field]).to.equal(expectedObject[field]);
+  }
+}
+
+export async function validateObjectList<T extends { _id: string }>(
+  objectList: T[],
+  expectedObjectList: Partial<T>[],
+  fieldsToCheck: (keyof T)[],
+) {
+  for (const object of objectList) {
+    const id = object._id;
+    const expectedObject = expectedObjectList.find((item) => item._id === id);
+    if (!expectedObject) {
+      expect(false).to.equal(true, `Expected object not found for id: ${id}`);
+    } else {
+      await validateObject(object, expectedObject, fieldsToCheck);
+    }
+  }
 }

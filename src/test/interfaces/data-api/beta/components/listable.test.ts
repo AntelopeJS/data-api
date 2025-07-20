@@ -11,7 +11,7 @@ import {
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { getFunctionName, listRequest } from '../utils';
+import { getFunctionName, listRequest, validateObjectList } from '../utils';
 
 const productTableName = 'products';
 
@@ -119,26 +119,24 @@ async function _dropProductTable() {
 }
 
 async function defaultListing() {
-  const { ids } = await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), defaultProductDataset);
 
-  const response = await listRequest(getFunctionName());
+  const response = await listRequest(getFunctionName(), {});
   expect(response.status).to.equal(200);
-  const data = (await response.json()) as {
-    results: Record<string, any>[];
-    total: number;
-    offset: number;
-    limit: number;
-  };
+  const data = (await response.json()) as { results: Product[] };
   expect(data.results).to.have.length(defaultProductDataset.length);
-
   const products = data.results;
-  expect(products[0].id).to.equal(ids[0]);
-  expect(products[0].name).to.equal(defaultProductDataset[0].name);
-  expect(products[0].price).to.equal(defaultProductDataset[0].price);
-  expect(products[0].reference).to.equal(defaultProductDataset[0].reference);
-  expect(products[0].metadata).to.equal(defaultProductDataset[0].metadata);
-  expect(products[0].description).to.equal(defaultProductDataset[0].description);
-  expect(products[0].internalNotes).to.equal(undefined);
+  await validateObjectList(products, defaultProductDataset, [
+    '_id',
+    'name',
+    'price',
+    'reference',
+    'metadata',
+    'description',
+  ]);
+  for (const product of products) {
+    expect(product.internalNotes).to.equal(undefined);
+  }
 }
 
 async function listOnlyDetailedFields() {

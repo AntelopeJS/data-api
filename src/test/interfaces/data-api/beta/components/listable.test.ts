@@ -16,7 +16,7 @@ import { getFunctionName, listRequest } from '../utils';
 @RegisterTable('products')
 class Product extends Table {
   @Index({ primary: true })
-  declare id: string;
+  declare _id: string;
 
   @Index()
   declare reference: string;
@@ -86,7 +86,7 @@ async function _createDataController(testName: string, product: Partial<Product>
     declare productModel: ProductModel;
 
     @Listable()
-    declare id: string;
+    declare _id: string;
 
     @Listable()
     declare name: string;
@@ -109,6 +109,10 @@ async function _createDataController(testName: string, product: Partial<Product>
   await InitializeDatabase(database_name, { product: ProductModel });
   const insertResults = await productModel.insert(product);
   return { ids: insertResults.generated_keys!, productModel };
+}
+
+async function _dropProductTable() {
+  await Database(database_name).table(productTableName).delete();
 }
 
 async function defaultListing() {

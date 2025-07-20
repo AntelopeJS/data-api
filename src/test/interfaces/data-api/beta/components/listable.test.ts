@@ -13,7 +13,9 @@ import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.loca
 import { Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
 import { getFunctionName, listRequest } from '../utils';
 
-@RegisterTable('products')
+const productTableName = 'products';
+
+@RegisterTable(productTableName)
 class Product extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -28,7 +30,7 @@ class Product extends Table {
   declare internalNotes: string;
   declare metadata: string;
 }
-class ProductModel extends BasicDataModel(Product, 'products') {}
+class ProductModel extends BasicDataModel(Product, productTableName) {}
 const database_name = 'test-data-api-listable';
 
 const defaultProductDataset: Partial<Product>[] = [
@@ -79,6 +81,7 @@ describe('Field Listable', () => {
 });
 
 async function _createDataController(testName: string, product: Partial<Product>[]) {
+  await _dropProductTable();
   @RegisterDataController()
   class _ListableTestAPI extends DataController(Product, DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()

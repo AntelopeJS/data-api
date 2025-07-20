@@ -83,7 +83,7 @@ describe('Field Listable', () => {
 async function _createDataController(testName: string, product: Partial<Product>[]) {
   await _dropProductTable();
   @RegisterDataController()
-  class _ListableTestAPI extends DataController(Product, DefaultRoutes.All, Controller(`/${testName}`)) {
+  class _ListableTestAPI extends DataController(Product, { list: DefaultRoutes.List }, Controller(`/${testName}`)) {
     @ModelReference()
     @StaticModel(ProductModel, database_name)
     declare productModel: ProductModel;

@@ -257,7 +257,7 @@ async function listOnly2ndPage() {
   expect(data.limit).to.equal(1);
 }
 
-function getSortedField(dataset: Partial<Product>[], field: keyof Product, direction: 'asc' | 'desc') {
+function _getSortedField(dataset: Partial<Product>[], field: keyof Product, direction: 'asc' | 'desc') {
   const mappedField = dataset.map((product) => product[field]);
 
   const filteredField = mappedField.filter((v): v is string | number | Date => v !== undefined && v !== null);
@@ -292,7 +292,7 @@ async function sortByNameAscending() {
   expect(data.results).to.have.length(defaultProductDataset.length);
 
   const sortedNames = data.results.map((product: any) => product.name);
-  const expectedNames = getSortedField(defaultProductDataset, 'name', 'asc');
+  const expectedNames = _getSortedField(defaultProductDataset, 'name', 'asc');
   expect(sortedNames).to.deep.equal(expectedNames);
 }
 
@@ -310,7 +310,7 @@ async function sortByNameDescending() {
   expect(data.results).to.have.length(defaultProductDataset.length);
 
   const sortedNames = data.results.map((product: any) => product.name);
-  const expectedNames = getSortedField(defaultProductDataset, 'name', 'desc');
+  const expectedNames = _getSortedField(defaultProductDataset, 'name', 'desc');
   expect(sortedNames).to.deep.equal(expectedNames);
 }
 
@@ -328,7 +328,7 @@ async function sortByPriceAscending() {
   expect(data.results).to.have.length(defaultProductDataset.length);
 
   const sortedPrices = data.results.map((product: any) => product.price);
-  const expectedPrices = getSortedField(defaultProductDataset, 'price', 'asc');
+  const expectedPrices = _getSortedField(defaultProductDataset, 'price', 'asc');
   expect(sortedPrices).to.deep.equal(expectedPrices);
 }
 
@@ -346,7 +346,7 @@ async function sortByPriceDescending() {
   expect(data.results).to.have.length(defaultProductDataset.length);
 
   const sortedPrices = data.results.map((product: any) => product.price);
-  const expectedPrices = getSortedField(defaultProductDataset, 'price', 'desc');
+  const expectedPrices = _getSortedField(defaultProductDataset, 'price', 'desc');
   expect(sortedPrices).to.deep.equal(expectedPrices);
 }
 
@@ -363,7 +363,7 @@ async function sortByAddedAtAscending() {
   };
   expect(data.results).to.have.length(defaultProductDataset.length);
   const sortedDates = data.results.map((product: any) => new Date(product.addedAt).getTime());
-  const expectedDates = getSortedField(defaultProductDataset, 'addedAt', 'asc')
+  const expectedDates = _getSortedField(defaultProductDataset, 'addedAt', 'asc')
     .filter((value): value is Date => value instanceof Date)
     .map((date: Date) => date.getTime());
   expect(sortedDates).to.deep.equal(expectedDates);
@@ -383,7 +383,7 @@ async function sortByAddedAtDescending() {
   expect(data.results).to.have.length(defaultProductDataset.length);
 
   const sortedDates = data.results.map((product: any) => new Date(product.addedAt).getTime());
-  const expectedDates = getSortedField(defaultProductDataset, 'addedAt', 'desc')
+  const expectedDates = _getSortedField(defaultProductDataset, 'addedAt', 'desc')
     .filter((value): value is Date => value instanceof Date)
     .map((date: Date) => date.getTime());
   expect(sortedDates).to.deep.equal(expectedDates);

@@ -11,7 +11,7 @@ import {
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Access, AccessMode, Listable, ModelReference, Sortable } from '@ajs.local/data-api/beta/metadata';
-import { getFunctionName, listRequest, validateObjectList } from '../utils';
+import { getFunctionName, listRequest, request, validateObjectList } from '../utils';
 
 const productTableName = 'products';
 
@@ -96,6 +96,7 @@ async function _createDataController(testName: string, product: Partial<Product>
     declare productModel: ProductModel;
 
     @Listable()
+    @Listable(true, 'detailed')
     @Access(AccessMode.ReadOnly)
     declare _id: string;
 
@@ -121,11 +122,12 @@ async function _createDataController(testName: string, product: Partial<Product>
     @Sortable({ noIndex: true })
     declare addedAt: Date;
 
-    @Listable(['detailed'])
+    @Listable(true, 'detailed')
     @Access(AccessMode.ReadOnly)
     declare metadata: string;
 
-    @Listable(['list', 'detailed'])
+    @Listable(true, 'detailed')
+    @Listable(true, 'nonexistent')
     @Access(AccessMode.ReadOnly)
     declare description: string;
   }
@@ -171,24 +173,18 @@ async function defaultListing() {
 async function listDetailedFields() {
   const { ids, productModel } = await _createDataController(getFunctionName(), defaultProductDataset);
 
-  const response = await listRequest(getFunctionName(), { pluckMode: 'detailed' });
+  const response = await request(getFunctionName(), 'detailed', 'GET', undefined, {});
   expect(response.status).to.equal(200);
   const data = (await response.json()) as { results: Product[] };
   expect(data.results).to.have.length(defaultProductDataset.length);
   const listed_products = data.results;
   const database_products = await _getDatabaseProducts(Object.values(ids), productModel);
-  console.log(listed_products);
-  console.log(database_products);
-  await validateObjectList(listed_products, database_products, [
-    '_id',
-    'name',
-    'price',
-    'reference',
-    'metadata',
-    'description',
-  ]);
+  await validateObjectList(listed_products, database_products, ['_id', 'metadata', 'description']);
   for (const product of listed_products) {
     expect(product.internalNotes).to.equal(undefined);
+    expect(product.name).to.equal(undefined);
+    expect(product.price).to.equal(undefined);
+    expect(product.reference).to.equal(undefined);
   }
 }
 

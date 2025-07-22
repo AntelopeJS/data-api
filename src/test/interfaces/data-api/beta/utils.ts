@@ -9,7 +9,7 @@ export function getFunctionName(): string {
   return match?.[1] ?? 'unknown';
 }
 
-async function _request(
+export async function request(
   functionName: string,
   uri: string,
   method: string,
@@ -26,23 +26,23 @@ async function _request(
 }
 
 export async function newRequest(functionName: string, payload: unknown, queryParams?: Record<string, string>) {
-  return await _request(functionName, 'new', 'POST', payload, queryParams);
+  return await request(functionName, 'new', 'POST', payload, queryParams);
 }
 
 export async function getRequest(functionName: string, queryParams?: Record<string, string>) {
-  return await _request(functionName, 'get', 'GET', undefined, queryParams);
+  return await request(functionName, 'get', 'GET', undefined, queryParams);
 }
 
 export async function listRequest(functionName: string, queryParams?: Record<string, string>) {
-  return await _request(functionName, 'list', 'GET', undefined, queryParams);
+  return await request(functionName, 'list', 'GET', undefined, queryParams);
 }
 
 export async function editRequest(functionName: string, payload: unknown, queryParams?: Record<string, string>) {
-  return await _request(functionName, 'edit', 'PUT', payload, queryParams);
+  return await request(functionName, 'edit', 'PUT', payload, queryParams);
 }
 
 export async function deleteRequest(functionName: string, queryParams?: Record<string, string>) {
-  return await _request(functionName, 'delete', 'DELETE', undefined, queryParams);
+  return await request(functionName, 'delete', 'DELETE', undefined, queryParams);
 }
 
 export async function validateObject<T>(object: T, expectedObject: Partial<T>, fieldsToCheck: (keyof T)[]) {

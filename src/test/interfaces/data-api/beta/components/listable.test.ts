@@ -66,6 +66,7 @@ const defaultProductDataset: Partial<Product>[] = [
 describe('Field Listable', () => {
   it('default listing', async () => await defaultListing());
   it('list only detailed fields', async () => await listDetailedFields());
+  it('list nonexistant pluck mode', async () => await listNonexistantPluckMode());
   it('list only 2 rows per page', async () => await listOnly2RowsPerPage());
   it('list from 2nd page', async () => await listFrom2ndPage());
   it('list only 2 first pages', async () => await listOnly2FirstPages());
@@ -186,6 +187,13 @@ async function listDetailedFields() {
     expect(product.price).to.equal(undefined);
     expect(product.reference).to.equal(undefined);
   }
+}
+
+async function listNonexistantPluckMode() {
+  await _createDataController(getFunctionName(), defaultProductDataset);
+
+  const response = await request(getFunctionName(), 'nonexistent', 'GET', undefined, {});
+  expect(response.status).to.equal(404);
 }
 
 async function listOnly2RowsPerPage() {

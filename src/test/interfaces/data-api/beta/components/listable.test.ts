@@ -83,33 +83,51 @@ describe('Field Listable', () => {
 async function _createDataController(testName: string, product: Partial<Product>[]) {
   await _dropProductTable();
   @RegisterDataController()
-  class _ListableTestAPI extends DataController(Product, { list: DefaultRoutes.List }, Controller(`/${testName}`)) {
+  class _ListableTestAPI extends DataController(
+    Product,
+    {
+      list: DefaultRoutes.List,
+      detailed: DefaultRoutes.WithOptions(DefaultRoutes.List, { pluckMode: 'detailed' }),
+    },
+    Controller(`/${testName}`),
+  ) {
     @ModelReference()
     @StaticModel(ProductModel, database_name)
     declare productModel: ProductModel;
 
     @Listable()
+    @Access(AccessMode.ReadOnly)
     declare _id: string;
 
     @Listable()
+    @Access(AccessMode.ReadOnly)
     declare name: string;
 
     @Listable()
+    @Access(AccessMode.ReadOnly)
     declare price: number;
 
     @Listable()
+    @Access(AccessMode.ReadOnly)
     declare reference: string;
 
+    @Listable()
     declare internalNotes: string;
 
-    @Listable(true, 'detailed')
+    @Listable(['detailed'])
+    @Access(AccessMode.ReadOnly)
     declare metadata: string;
 
     @Listable(['list', 'detailed'])
+    @Access(AccessMode.ReadOnly)
     declare description: string;
+
+    @Listable(['list'])
+    @Access(AccessMode.ReadOnly)
+    declare addedAt: Date;
   }
   const productModel = new ProductModel(Database(database_name));
-  await InitializeDatabase(database_name, { product: ProductModel });
+  await InitializeDatabase(database_name, { products: ProductModel });
   const insertResults = await productModel.insert(product);
   return { ids: insertResults.generated_keys!, productModel };
 }
@@ -118,24 +136,32 @@ async function _dropProductTable() {
   await Database(database_name).table(productTableName).delete();
 }
 
+async function _getDatabaseProducts(ids: string[], productModel: ProductModel) {
+  let database_products: Product[] = [];
+  for (const id of ids) {
+    const product = await productModel.get(id);
+    expect(product).to.not.equal(undefined);
+    if (product) {
+      database_products.push(product);
+    }
+  }
+  return database_products;
+}
+
 async function defaultListing() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  const { ids, productModel } = await _createDataController(getFunctionName(), defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), {});
   expect(response.status).to.equal(200);
   const data = (await response.json()) as { results: Product[] };
   expect(data.results).to.have.length(defaultProductDataset.length);
-  const products = data.results;
-  await validateObjectList(products, defaultProductDataset, [
-    '_id',
-    'name',
-    'price',
-    'reference',
-    'metadata',
-    'description',
-  ]);
-  for (const product of products) {
+  const listed_products = data.results;
+  const database_products = await _getDatabaseProducts(Object.values(ids), productModel);
+  await validateObjectList(listed_products, database_products, ['_id', 'name', 'price', 'reference']);
+  for (const product of listed_products) {
     expect(product.internalNotes).to.equal(undefined);
+    expect(product.description).to.equal(undefined);
+    expect(product.metadata).to.equal(undefined);
   }
 }
 

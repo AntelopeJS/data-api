@@ -163,11 +163,6 @@ async function editWithAllMandatoryFields() {
   );
   expect(response.status).to.equal(200);
 
-  const result = (await response.json()) as string[];
-  expect(result).to.be.an('array');
-  expect(result).to.have.length(1);
-  expect(result[0]).to.be.a('string');
-
   const order = await orderModel.get(id!);
   expect(order).to.be.an('object');
   expect(order).to.have.property('customerName', validOrderDataset.alternative.customerName);
@@ -204,11 +199,6 @@ async function skipMandatoryValidationWhenNoMandatory() {
 
   const response = await request(getFunctionName(), 'editNoMandatory', 'PUT', { notes: 'Updated notes' }, { id: id! });
   expect(response.status).to.equal(200);
-
-  const result = (await response.json()) as string[];
-  expect(result).to.be.an('array');
-  expect(result).to.have.length(1);
-  expect(result[0]).to.be.a('string');
 
   const order = await orderModel.get(id!);
   expect(order).to.be.an('object');

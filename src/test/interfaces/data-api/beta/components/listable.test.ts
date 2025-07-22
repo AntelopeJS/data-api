@@ -207,6 +207,8 @@ async function listOnly2RowsPerPage() {
   expect(data.total).to.equal(defaultProductDataset.length);
   expect(data.limit).to.equal(2);
   expect(data.offset).to.equal(0);
+  expect(data.results[0]._id).to.not.equal(undefined);
+  expect(data.results[1]._id).to.not.equal(undefined);
 }
 
 async function listFrom2ndPage() {
@@ -223,6 +225,7 @@ async function listFrom2ndPage() {
   expect(data.results).to.have.length(1);
   expect(data.total).to.equal(defaultProductDataset.length);
   expect(data.offset).to.equal(2);
+  expect(data.results[0]._id).to.not.equal(undefined);
 }
 
 async function listOnly2FirstPages() {
@@ -238,6 +241,7 @@ async function listOnly2FirstPages() {
   };
   expect(data.results).to.have.length(defaultProductDataset.length);
   expect(data.total).to.equal(defaultProductDataset.length);
+  expect(data.results[0]._id).to.not.equal(undefined);
 }
 
 async function listOnly2ndPage() {
@@ -255,6 +259,7 @@ async function listOnly2ndPage() {
   expect(data.total).to.equal(defaultProductDataset.length);
   expect(data.offset).to.equal(2);
   expect(data.limit).to.equal(1);
+  expect(data.results[0]._id).to.not.equal(undefined);
 }
 
 function _getSortedField(dataset: Partial<Product>[], field: keyof Product, direction: 'asc' | 'desc') {

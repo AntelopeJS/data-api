@@ -10,7 +10,7 @@ import {
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
-import { Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
+import { Access, AccessMode, Listable, ModelReference, Sortable } from '@ajs.local/data-api/beta/metadata';
 import { getFunctionName, listRequest, validateObjectList } from '../utils';
 
 const productTableName = 'products';
@@ -65,7 +65,7 @@ const defaultProductDataset: Partial<Product>[] = [
 
 describe('Field Listable', () => {
   it('default listing', async () => await defaultListing());
-  it('list only detailed fields', async () => await listOnlyDetailedFields());
+  it('list only detailed fields', async () => await listDetailedFields());
   it('list only 2 rows per page', async () => await listOnly2RowsPerPage());
   it('list from 2nd page', async () => await listFrom2ndPage());
   it('list only 2 first pages', async () => await listOnly2FirstPages());
@@ -101,10 +101,12 @@ async function _createDataController(testName: string, product: Partial<Product>
 
     @Listable()
     @Access(AccessMode.ReadOnly)
+    @Sortable({ noIndex: true })
     declare name: string;
 
     @Listable()
     @Access(AccessMode.ReadOnly)
+    @Sortable({ noIndex: true })
     declare price: number;
 
     @Listable()
@@ -114,6 +116,11 @@ async function _createDataController(testName: string, product: Partial<Product>
     @Listable()
     declare internalNotes: string;
 
+    @Listable()
+    @Access(AccessMode.ReadOnly)
+    @Sortable({ noIndex: true })
+    declare addedAt: Date;
+
     @Listable(['detailed'])
     @Access(AccessMode.ReadOnly)
     declare metadata: string;
@@ -121,10 +128,6 @@ async function _createDataController(testName: string, product: Partial<Product>
     @Listable(['list', 'detailed'])
     @Access(AccessMode.ReadOnly)
     declare description: string;
-
-    @Listable(['list'])
-    @Access(AccessMode.ReadOnly)
-    declare addedAt: Date;
   }
   const productModel = new ProductModel(Database(database_name));
   await InitializeDatabase(database_name, { products: ProductModel });
@@ -165,21 +168,28 @@ async function defaultListing() {
   }
 }
 
-async function listOnlyDetailedFields() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+async function listDetailedFields() {
+  const { ids, productModel } = await _createDataController(getFunctionName(), defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { pluckMode: 'detailed' });
   expect(response.status).to.equal(200);
-  const data = (await response.json()) as {
-    results: Record<string, any>[];
-    total: number;
-    offset: number;
-    limit: number;
-  };
+  const data = (await response.json()) as { results: Product[] };
   expect(data.results).to.have.length(defaultProductDataset.length);
-
-  const product = data.results[0];
-  expect(product.metadata).to.equal(defaultProductDataset[0].metadata);
+  const listed_products = data.results;
+  const database_products = await _getDatabaseProducts(Object.values(ids), productModel);
+  console.log(listed_products);
+  console.log(database_products);
+  await validateObjectList(listed_products, database_products, [
+    '_id',
+    'name',
+    'price',
+    'reference',
+    'metadata',
+    'description',
+  ]);
+  for (const product of listed_products) {
+    expect(product.internalNotes).to.equal(undefined);
+  }
 }
 
 async function listOnly2RowsPerPage() {
@@ -352,7 +362,6 @@ async function sortByAddedAtAscending() {
     limit: number;
   };
   expect(data.results).to.have.length(defaultProductDataset.length);
-
   const sortedDates = data.results.map((product: any) => new Date(product.addedAt).getTime());
   const expectedDates = getSortedField(defaultProductDataset, 'addedAt', 'asc')
     .filter((value): value is Date => value instanceof Date)

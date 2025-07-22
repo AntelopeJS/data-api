@@ -10,8 +10,8 @@ import {
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
-import { Mandatory, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { getFunctionName, newRequest } from '../utils';
+import { Access, AccessMode, Mandatory, ModelReference } from '@ajs.local/data-api/beta/metadata';
+import { editRequest, getFunctionName, newRequest, request, validateObject } from '../utils';
 import path from 'node:path';
 
 const orderTableName = 'orders';
@@ -20,7 +20,7 @@ const database_name = `test-data-api-${path.basename(__filename).replace(/\.test
 @RegisterTable(orderTableName)
 class Order extends Table {
   @Index({ primary: true })
-  declare id: string;
+  declare _id: string;
 
   @Index()
   declare internalReference: string;
@@ -67,30 +67,36 @@ async function _dropOrderTable() {
   await Database(database_name).table(orderTableName).delete();
 }
 
-async function _createDataController(testName: string, order?: Partial<Order>) {
+async function _createDataController(testName: string, route: any, order?: Partial<Order>) {
   await _dropOrderTable();
   @RegisterDataController()
-  class _MandatoryTestAPI extends DataController(Order, DefaultRoutes.All, Controller(`/${testName}`)) {
+  class _MandatoryTestAPI extends DataController(Order, route, Controller(`/${testName}`)) {
     @ModelReference()
     @StaticModel(OrderModel, database_name)
     declare orderModel: OrderModel;
 
     declare _id: string;
 
+    @Access(AccessMode.ReadWrite)
     @Mandatory('new', 'edit')
     declare customerName: string;
 
+    @Access(AccessMode.ReadWrite)
     @Mandatory('new')
     declare customerEmail: string;
 
+    @Access(AccessMode.ReadWrite)
     @Mandatory('new', 'edit')
     declare totalAmount: number;
 
+    @Access(AccessMode.ReadWrite)
     @Mandatory('edit')
     declare status: string;
 
+    @Access(AccessMode.ReadWrite)
     declare notes: string;
 
+    @Access(AccessMode.ReadWrite)
     declare internalReference: string;
   }
   const orderModel = new OrderModel(Database(database_name));
@@ -104,7 +110,11 @@ async function _createDataController(testName: string, order?: Partial<Order>) {
 }
 
 async function newWithAllMandatoryFields() {
-  const { orderModel } = await _createDataController(getFunctionName(), validOrderDataset.default);
+  const { orderModel } = await _createDataController(
+    getFunctionName(),
+    { new: DefaultRoutes.New },
+    validOrderDataset.alternative,
+  );
 
   const response = await newRequest(getFunctionName(), {
     customerName: validOrderDataset.default.customerName,
@@ -117,35 +127,40 @@ async function newWithAllMandatoryFields() {
   expect(result).to.have.length(1);
   expect(result[0]).to.be.a('string');
   const order = await orderModel.get(result[0]);
-  expect(order).to.be.an('object');
-  expect(order).to.have.property('customerName', validOrderDataset.default.customerName);
-  expect(order).to.have.property('customerEmail', validOrderDataset.default.customerEmail);
-  expect(order).to.have.property('totalAmount', validOrderDataset.default.totalAmount);
+  expect(order).to.not.equal(undefined);
+  if (order) {
+    await validateObject(order, validOrderDataset.default, ['customerName', 'customerEmail', 'totalAmount']);
+  }
 }
 
 async function newWithMissingMandatoryFields() {
-  await _createDataController(getFunctionName());
+  await _createDataController(getFunctionName(), { new: DefaultRoutes.New });
 
   const response = await newRequest(getFunctionName(), {
     customerName: validOrderDataset.default.customerName,
     totalAmount: validOrderDataset.default.totalAmount,
   });
   expect(response.status).to.equal(400);
-  const result = (await response.json()) as { error: string };
-  expect(result).to.be.an('object');
-  expect(result).to.have.property('error');
-  expect(result.error).to.include('customerEmail');
+  const result = await response.text();
+  expect(result).to.include('Missing mandatory fields: customerEmail');
 }
 
 async function editWithAllMandatoryFields() {
-  const { id, orderModel } = await _createDataController(getFunctionName(), validOrderDataset.default);
+  const { id, orderModel } = await _createDataController(
+    getFunctionName(),
+    { edit: DefaultRoutes.Edit },
+    validOrderDataset.default,
+  );
 
-  const response = await editRequest(getFunctionName(), {
-    id: id!,
-    customerName: validOrderDataset.alternative.customerName,
-    totalAmount: validOrderDataset.alternative.totalAmount,
-    status: validOrderDataset.alternative.status,
-  });
+  const response = await editRequest(
+    getFunctionName(),
+    {
+      customerName: validOrderDataset.alternative.customerName,
+      totalAmount: validOrderDataset.alternative.totalAmount,
+      status: validOrderDataset.alternative.status,
+    },
+    { id: id! },
+  );
   expect(response.status).to.equal(200);
 
   const result = (await response.json()) as string[];
@@ -161,32 +176,33 @@ async function editWithAllMandatoryFields() {
 }
 
 async function editWithMissingMandatoryFields() {
-  const { id } = await _createDataController(getFunctionName(), validOrderDataset.default);
-
-  const response = await editRequest(getFunctionName(), {
-    id: id!,
-    customerName: validOrderDataset.alternative.customerName,
-    totalAmount: validOrderDataset.alternative.totalAmount,
-  });
-  expect(response.status).to.equal(400);
-
-  const result = (await response.json()) as { error: string };
-  expect(result).to.be.an('object');
-  expect(result).to.have.property('error');
-  expect(result.error).to.include('status');
-}
-
-async function skipMandatoryValidationWhenNoMandatory() {
-  const { id, orderModel } = await _createDataController(getFunctionName(), validOrderDataset.default);
+  const { id } = await _createDataController(
+    getFunctionName(),
+    { edit: DefaultRoutes.Edit },
+    validOrderDataset.default,
+  );
 
   const response = await editRequest(
     getFunctionName(),
     {
-      id: id!,
-      notes: 'Updated notes',
+      customerName: validOrderDataset.alternative.customerName,
+      totalAmount: validOrderDataset.alternative.totalAmount,
     },
-    { noMandatory: 'true' },
+    { id: id! },
   );
+  expect(response.status).to.equal(400);
+  const text = await response.text();
+  expect(text).to.include('Missing mandatory fields: status');
+}
+
+async function skipMandatoryValidationWhenNoMandatory() {
+  const { id, orderModel } = await _createDataController(
+    getFunctionName(),
+    { editNoMandatory: DefaultRoutes.WithOptions(DefaultRoutes.Edit, { noMandatory: 'true' }) },
+    validOrderDataset.default,
+  );
+
+  const response = await request(getFunctionName(), 'editNoMandatory', 'PUT', { notes: 'Updated notes' }, { id: id! });
   expect(response.status).to.equal(200);
 
   const result = (await response.json()) as string[];

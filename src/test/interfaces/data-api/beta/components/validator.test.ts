@@ -12,8 +12,12 @@ import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Validator, ModelReference } from '@ajs.local/data-api/beta/metadata';
 import { getFunctionName, newRequest } from '../utils';
+import path from 'node:path';
 
-@RegisterTable('products')
+const productTableName = 'products';
+const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+
+@RegisterTable(productTableName)
 class Product extends Table {
   @Index({ primary: true })
   declare id: string;
@@ -28,9 +32,8 @@ class Product extends Table {
   declare status: string;
   declare tags: string[];
 }
-class ProductModel extends BasicDataModel(Product, 'products') {}
-const database_name = 'test-data-api-validator';
-let database: Database;
+
+class ProductModel extends BasicDataModel(Product, productTableName) {}
 
 let validProductData = {
   name: 'Valid Product',
@@ -82,9 +85,8 @@ async function _createDataController(testName: string, product?: Partial<Product
     @Validator((value) => Array.isArray(value) && value.every((tag) => typeof tag === 'string' && tag.length > 0))
     declare tags: string[];
   }
-  database = Database(database_name);
-  const productModel = new ProductModel(database);
-  await InitializeDatabase(database_name, { product: ProductModel });
+  const productModel = new ProductModel(Database(database_name));
+  await InitializeDatabase(database_name, { products: ProductModel });
 
   if (product) {
     const insertResult = await productModel.insert(product);

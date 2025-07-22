@@ -11,9 +11,13 @@ import {
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Mandatory, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { editRequest, getFunctionName, newRequest } from '../utils';
+import { getFunctionName, newRequest } from '../utils';
+import path from 'node:path';
 
-@RegisterTable('orders')
+const orderTableName = 'orders';
+const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+
+@RegisterTable(orderTableName)
 class Order extends Table {
   @Index({ primary: true })
   declare id: string;
@@ -27,9 +31,8 @@ class Order extends Table {
   declare status: string;
   declare notes: string;
 }
-class OrderModel extends BasicDataModel(Order, 'orders') {}
-const database_name = 'test-data-api-mandatory';
-let database: Database;
+
+class OrderModel extends BasicDataModel(Order, orderTableName) {}
 
 const validOrderDataset: Record<string, Partial<Order>> = {
   default: {
@@ -60,14 +63,19 @@ describe('Field Mandatory', () => {
   after(async () => await DeleteDatabase(database_name));
 });
 
+async function _dropOrderTable() {
+  await Database(database_name).table(orderTableName).delete();
+}
+
 async function _createDataController(testName: string, order?: Partial<Order>) {
+  await _dropOrderTable();
   @RegisterDataController()
   class _MandatoryTestAPI extends DataController(Order, DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
     @StaticModel(OrderModel, database_name)
     declare orderModel: OrderModel;
 
-    declare id: string;
+    declare _id: string;
 
     @Mandatory('new', 'edit')
     declare customerName: string;
@@ -85,8 +93,7 @@ async function _createDataController(testName: string, order?: Partial<Order>) {
 
     declare internalReference: string;
   }
-  database = Database(database_name);
-  const orderModel = new OrderModel(database);
+  const orderModel = new OrderModel(Database(database_name));
   await InitializeDatabase(database_name, { order: OrderModel });
 
   if (order) {

@@ -12,8 +12,12 @@ import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Access, AccessMode, Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
 import { deleteRequest, editRequest, getFunctionName, getRequest, listRequest, newRequest } from '../utils';
+import path from 'node:path';
 
-@RegisterTable('users')
+const userTableName = 'users';
+const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+
+@RegisterTable(userTableName)
 class User extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -25,9 +29,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, 'users') {}
-const database_name = 'test-data-api-components';
-let database: Database;
+class UserModel extends BasicDataModel(User, userTableName) {}
 
 const validUserDataset: Record<string, Partial<User>> = {
   default: {
@@ -84,8 +86,7 @@ async function _createDataController(testName: string, user: Partial<User>, rout
     @Access(AccessMode.ReadWrite)
     declare email: string;
   }
-  database = Database(database_name);
-  const userModel = new UserModel(database);
+  const userModel = new UserModel(Database(database_name));
   await InitializeDatabase(database_name, { user: UserModel });
   const insertResult = await userModel.insert(user);
   return { id: insertResult.generated_keys![0], userModel };

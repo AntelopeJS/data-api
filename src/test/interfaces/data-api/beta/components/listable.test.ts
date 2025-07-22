@@ -12,8 +12,10 @@ import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Access, AccessMode, Listable, ModelReference, Sortable } from '@ajs.local/data-api/beta/metadata';
 import { getFunctionName, listRequest, request, validateObjectList } from '../utils';
+import path from 'node:path';
 
 const productTableName = 'products';
+const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
 
 @RegisterTable(productTableName)
 class Product extends Table {
@@ -31,7 +33,6 @@ class Product extends Table {
   declare metadata: string;
 }
 class ProductModel extends BasicDataModel(Product, productTableName) {}
-const database_name = 'test-data-api-listable';
 
 const defaultProductDataset: Partial<Product>[] = [
   {

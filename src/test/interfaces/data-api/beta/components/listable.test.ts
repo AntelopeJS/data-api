@@ -81,17 +81,10 @@ describe('Field Listable', () => {
   after(async () => await DeleteDatabase(database_name));
 });
 
-async function _createDataController(testName: string, product: Partial<Product>[]) {
+async function _createDataController(testName: string, route: any, product: Partial<Product>[]) {
   await _dropProductTable();
   @RegisterDataController()
-  class _ListableTestAPI extends DataController(
-    Product,
-    {
-      list: DefaultRoutes.List,
-      detailed: DefaultRoutes.WithOptions(DefaultRoutes.List, { pluckMode: 'detailed' }),
-    },
-    Controller(`/${testName}`),
-  ) {
+  class _ListableTestAPI extends DataController(Product, route, Controller(`/${testName}`)) {
     @ModelReference()
     @StaticModel(ProductModel, database_name)
     declare productModel: ProductModel;
@@ -155,7 +148,11 @@ async function _getDatabaseProducts(ids: string[], productModel: ProductModel) {
 }
 
 async function defaultListing() {
-  const { ids, productModel } = await _createDataController(getFunctionName(), defaultProductDataset);
+  const { ids, productModel } = await _createDataController(
+    getFunctionName(),
+    { list: DefaultRoutes.List },
+    defaultProductDataset,
+  );
 
   const response = await listRequest(getFunctionName(), {});
   expect(response.status).to.equal(200);
@@ -172,7 +169,11 @@ async function defaultListing() {
 }
 
 async function listDetailedFields() {
-  const { ids, productModel } = await _createDataController(getFunctionName(), defaultProductDataset);
+  const { ids, productModel } = await _createDataController(
+    getFunctionName(),
+    { detailed: DefaultRoutes.WithOptions(DefaultRoutes.List, { pluckMode: 'detailed' }) },
+    defaultProductDataset,
+  );
 
   const response = await request(getFunctionName(), 'detailed', 'GET', undefined, {});
   expect(response.status).to.equal(200);
@@ -190,14 +191,18 @@ async function listDetailedFields() {
 }
 
 async function listNonexistantPluckMode() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(
+    getFunctionName(),
+    { detailed: DefaultRoutes.WithOptions(DefaultRoutes.List, { pluckMode: 'detailed' }) },
+    defaultProductDataset,
+  );
 
   const response = await request(getFunctionName(), 'nonexistent', 'GET', undefined, {});
   expect(response.status).to.equal(404);
 }
 
 async function listOnly2RowsPerPage() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { limit: '2' });
   expect(response.status).to.equal(200);
@@ -216,7 +221,7 @@ async function listOnly2RowsPerPage() {
 }
 
 async function listFrom2ndPage() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { offset: '2' });
   expect(response.status).to.equal(200);
@@ -233,7 +238,7 @@ async function listFrom2ndPage() {
 }
 
 async function listOnly2FirstPages() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { maxPage: '2' });
   expect(response.status).to.equal(200);
@@ -249,7 +254,7 @@ async function listOnly2FirstPages() {
 }
 
 async function listOnly2ndPage() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { offset: '2', limit: '1' });
   expect(response.status).to.equal(200);
@@ -288,7 +293,7 @@ function _getSortedField(dataset: Partial<Product>[], field: keyof Product, dire
 }
 
 async function sortByNameAscending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'name', sortDirection: 'asc' });
   expect(response.status).to.equal(200);
@@ -306,7 +311,7 @@ async function sortByNameAscending() {
 }
 
 async function sortByNameDescending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'name', sortDirection: 'desc' });
   expect(response.status).to.equal(200);
@@ -324,7 +329,7 @@ async function sortByNameDescending() {
 }
 
 async function sortByPriceAscending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'price', sortDirection: 'asc' });
   expect(response.status).to.equal(200);
@@ -342,7 +347,7 @@ async function sortByPriceAscending() {
 }
 
 async function sortByPriceDescending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'price', sortDirection: 'desc' });
   expect(response.status).to.equal(200);
@@ -360,7 +365,7 @@ async function sortByPriceDescending() {
 }
 
 async function sortByAddedAtAscending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'addedAt', sortDirection: 'asc' });
   expect(response.status).to.equal(200);
@@ -379,7 +384,7 @@ async function sortByAddedAtAscending() {
 }
 
 async function sortByAddedAtDescending() {
-  await _createDataController(getFunctionName(), defaultProductDataset);
+  await _createDataController(getFunctionName(), { list: DefaultRoutes.List }, defaultProductDataset);
 
   const response = await listRequest(getFunctionName(), { sortKey: 'addedAt', sortDirection: 'desc' });
   expect(response.status).to.equal(200);

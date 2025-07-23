@@ -31,7 +31,6 @@ class Order extends Table {
   declare status: string;
   declare notes: string;
 }
-
 class OrderModel extends BasicDataModel(Order, orderTableName) {}
 
 const validOrderDataset: Record<string, Partial<Order>> = {

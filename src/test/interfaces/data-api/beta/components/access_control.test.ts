@@ -12,8 +12,13 @@ import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Access, AccessMode, ModelReference } from '@ajs.local/data-api/beta/metadata';
 import { editRequest, getFunctionName, getRequest } from '../utils';
+import path from 'node:path';
 
-@RegisterTable('users')
+const userTableName = 'users';
+const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+console.log(database_name);
+
+@RegisterTable(userTableName)
 class User extends Table {
   @Index({ primary: true })
   declare id: string;
@@ -25,8 +30,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, 'users') {}
-const database_name = 'test-data-api-components';
+class UserModel extends BasicDataModel(User, userTableName) {}
 let database: Database;
 
 const defaultUserDataset: Partial<User> = {

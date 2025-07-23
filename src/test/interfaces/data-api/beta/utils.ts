@@ -47,7 +47,7 @@ export async function deleteRequest(functionName: string, queryParams?: Record<s
 
 export async function validateObject<T>(object: T, expectedObject: Partial<T>, fieldsToCheck: (keyof T)[]) {
   for (const field of fieldsToCheck) {
-    expect(object[field]).to.equal(expectedObject[field]);
+    expect(object[field]).to.deep.equal(expectedObject[field]);
   }
 }
 

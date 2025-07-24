@@ -126,7 +126,7 @@ function createIncorrectValidator(
   createDataset?: Partial<Product>,
 ) {
   return async () => {
-    const { id, productModel: _productModel } = await _createDataController(testName, route, createDataset);
+    const { id } = await _createDataController(testName, route, createDataset);
 
     const invalidData = { ...testDataset, [fieldName]: invalidValue };
     const response = await requestFunction(testName, invalidData, id ? { id } : {});

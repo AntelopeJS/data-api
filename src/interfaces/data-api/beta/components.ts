@@ -186,7 +186,7 @@ export namespace Query {
       if (!field.foreign || (pluck && !pluck.has(name))) {
         continue;
       }
-      const [table, index, multi] = field.foreign!;
+      const [table, index, multi] = field.foreign;
       if (multi) {
         changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>)
           .default([])

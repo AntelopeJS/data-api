@@ -22,9 +22,14 @@ import {
 import { editRequest, getRequest, listRequest, newRequest, request, validateObject } from './utils';
 import path from 'node:path';
 
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const customerTableName = `customers-${currentTestName}`;
+const productTableName = `products-${currentTestName}`;
+const orderTableName = `orders-${currentTestName}`;
+const orderItemTableName = `order_items-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
-@RegisterTable('customers')
+@RegisterTable(customerTableName)
 class Customer extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -45,7 +50,7 @@ class Customer extends Table {
   declare preferences: string[];
 }
 
-@RegisterTable('products')
+@RegisterTable(productTableName)
 class Product extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -67,7 +72,7 @@ class Product extends Table {
   declare updatedAt: Date;
 }
 
-@RegisterTable('orders')
+@RegisterTable(orderTableName)
 class Order extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -92,7 +97,7 @@ class Order extends Table {
   declare updatedAt: Date;
 }
 
-@RegisterTable('order_items')
+@RegisterTable(orderItemTableName)
 class OrderItem extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -110,10 +115,10 @@ class OrderItem extends Table {
   declare discount: number;
 }
 
-class CustomerModel extends BasicDataModel(Customer, 'customers') {}
-class ProductModel extends BasicDataModel(Product, 'products') {}
-class OrderModel extends BasicDataModel(Order, 'orders') {}
-class OrderItemModel extends BasicDataModel(OrderItem, 'order_items') {}
+class CustomerModel extends BasicDataModel(Customer, customerTableName) {}
+class ProductModel extends BasicDataModel(Product, productTableName) {}
+class OrderModel extends BasicDataModel(Order, orderTableName) {}
+class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) {}
 
 const testCustomers: Partial<Customer>[] = [
   {
@@ -492,10 +497,10 @@ class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Control
 
 async function initializeDatabase() {
   await InitializeDatabase(database_name, {
-    customers: CustomerModel,
-    products: ProductModel,
-    orders: OrderModel,
-    order_items: OrderItemModel,
+    [customerTableName]: CustomerModel,
+    [productTableName]: ProductModel,
+    [orderTableName]: OrderModel,
+    [orderItemTableName]: OrderItemModel,
   });
 }
 

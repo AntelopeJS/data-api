@@ -11,11 +11,12 @@ import {
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
 import { Validator, ModelReference, AccessMode, Access } from '@ajs.local/data-api/beta/metadata';
-import { editRequest, getFunctionName, newRequest, validateObject } from '../utils';
+import { editRequest, newRequest, validateObject } from '../utils';
 import path from 'node:path';
 
-const productTableName = 'products';
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const productTableName = `products-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
 @RegisterTable(productTableName)
 class Product extends Table {
@@ -106,7 +107,7 @@ async function _createDataController(testName: string, route: any, product?: Par
     declare tags: string[];
   }
   const productModel = new ProductModel(Database(database_name));
-  await InitializeDatabase(database_name, { products: ProductModel });
+  await InitializeDatabase(database_name, { [productTableName]: ProductModel });
 
   if (product) {
     const insertResult = await productModel.insert(product);
@@ -116,6 +117,7 @@ async function _createDataController(testName: string, route: any, product?: Par
 }
 
 function createIncorrectValidator(
+  testName: string,
   fieldName: string,
   invalidValue: any,
   requestFunction: (testName: string, data: any, id?: Record<string, string>) => Promise<Response>,
@@ -124,10 +126,10 @@ function createIncorrectValidator(
   createDataset?: Partial<Product>,
 ) {
   return async () => {
-    const { id, productModel: _productModel } = await _createDataController(getFunctionName(), route, createDataset);
+    const { id, productModel: _productModel } = await _createDataController(testName, route, createDataset);
 
     const invalidData = { ...testDataset, [fieldName]: invalidValue };
-    const response = await requestFunction(getFunctionName(), invalidData, id ? { id } : {});
+    const response = await requestFunction(testName, invalidData, id ? { id } : {});
     expect(response.status).to.equal(400);
 
     const error = await response.text();
@@ -136,15 +138,16 @@ function createIncorrectValidator(
 }
 
 function createCorrectValidator(
+  testName: string,
   requestFunction: (testName: string, data: any, id?: Record<string, string>) => Promise<Response>,
   route: any,
   testDataset: Partial<Product>,
   createDataset?: Partial<Product>,
 ) {
   return async () => {
-    const { id, productModel } = await _createDataController(getFunctionName(), route, createDataset);
+    const { id, productModel } = await _createDataController(testName, route, createDataset);
 
-    const response = await requestFunction(getFunctionName(), testDataset, id ? { id } : {});
+    const response = await requestFunction(testName, testDataset, id ? { id } : {});
     expect(response.status).to.equal(200);
 
     let product_fetched: Product | undefined;
@@ -165,11 +168,13 @@ function createCorrectValidator(
 }
 
 function createIncorrectValidatorEdit(
+  testName: string,
   fieldName: string,
   invalidValue: any,
   requestFunction: (testName: string, data: any) => Promise<Response>,
 ) {
   return createIncorrectValidator(
+    testName,
     fieldName,
     invalidValue,
     requestFunction,
@@ -180,11 +185,13 @@ function createIncorrectValidatorEdit(
 }
 
 function createIncorrectValidatorNew(
+  testName: string,
   fieldName: string,
   invalidValue: any,
   requestFunction: (testName: string, data: any) => Promise<Response>,
 ) {
   return createIncorrectValidator(
+    testName,
     fieldName,
     invalidValue,
     requestFunction,
@@ -194,22 +201,64 @@ function createIncorrectValidatorNew(
 }
 
 const validateCorrectParametersOnNew = createCorrectValidator(
+  'CorrectParametersOnNew',
   newRequest,
   { new: DefaultRoutes.New },
   validProductData.default,
 );
-const validateIncorrectDateParameterOnNew = createIncorrectValidatorNew('birthDate', 'invalid', newRequest);
-const validateIncorrectEmailParameterOnNew = createIncorrectValidatorNew('email', 'invalid', newRequest);
-const validateIncorrectStringParameterOnNew = createIncorrectValidatorNew('name', 'ab', newRequest);
-const validateIncorrectNumberParameterOnNew = createIncorrectValidatorNew('price', -10, newRequest);
+const validateIncorrectDateParameterOnNew = createIncorrectValidatorNew(
+  'DateParameterOnNew',
+  'birthDate',
+  'invalid',
+  newRequest,
+);
+const validateIncorrectEmailParameterOnNew = createIncorrectValidatorNew(
+  'EmailParameterOnNew',
+  'email',
+  'invalid',
+  newRequest,
+);
+const validateIncorrectStringParameterOnNew = createIncorrectValidatorNew(
+  'StringParameterOnNew',
+  'name',
+  'ab',
+  newRequest,
+);
+const validateIncorrectNumberParameterOnNew = createIncorrectValidatorNew(
+  'NumberParameterOnNew',
+  'price',
+  -10,
+  newRequest,
+);
 
 const validateCorrectParametersOnEdit = createCorrectValidator(
+  'CorrectParametersOnEdit',
   editRequest,
   { edit: DefaultRoutes.Edit },
   validProductData.alternative,
   validProductData.default,
 );
-const validateIncorrectDateParameterOnEdit = createIncorrectValidatorEdit('birthDate', 'invalid-date', editRequest);
-const validateIncorrectEmailParameterOnEdit = createIncorrectValidatorEdit('email', 'invalid-email@a', editRequest);
-const validateIncorrectStringParameterOnEdit = createIncorrectValidatorEdit('name', 'ab', editRequest);
-const validateIncorrectNumberParameterOnEdit = createIncorrectValidatorEdit('price', -10, editRequest);
+const validateIncorrectDateParameterOnEdit = createIncorrectValidatorEdit(
+  'DateParameterOnEdit',
+  'birthDate',
+  'invalid-date',
+  editRequest,
+);
+const validateIncorrectEmailParameterOnEdit = createIncorrectValidatorEdit(
+  'EmailParameterOnEdit',
+  'email',
+  'invalid-email@a',
+  editRequest,
+);
+const validateIncorrectStringParameterOnEdit = createIncorrectValidatorEdit(
+  'StringParameterOnEdit',
+  'name',
+  'ab',
+  editRequest,
+);
+const validateIncorrectNumberParameterOnEdit = createIncorrectValidatorEdit(
+  'NumberParameterOnEdit',
+  'price',
+  -10,
+  editRequest,
+);

@@ -14,9 +14,9 @@ import { Access, AccessMode, ModelReference } from '@ajs.local/data-api/beta/met
 import { editRequest, getFunctionName, getRequest } from '../utils';
 import path from 'node:path';
 
-const userTableName = 'users';
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
-console.log(database_name);
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const userTableName = `users-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
 @RegisterTable(userTableName)
 class User extends Table {
@@ -76,7 +76,7 @@ async function _createDataController(testName: string, user: Partial<User>) {
   }
   database = Database(database_name);
   const userModel = new UserModel(database);
-  await InitializeDatabase(database_name, { user: UserModel });
+  await InitializeDatabase(database_name, { [userTableName]: UserModel });
   const insertResult = await userModel.insert(user);
   return { id: insertResult.generated_keys![0], userModel };
 }

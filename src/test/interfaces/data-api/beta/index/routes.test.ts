@@ -14,8 +14,9 @@ import { Access, AccessMode, Listable, ModelReference } from '@ajs.local/data-ap
 import { deleteRequest, editRequest, getFunctionName, getRequest, listRequest, newRequest } from '../utils';
 import path from 'node:path';
 
-const userTableName = 'users';
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const userTableName = `users-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
 @RegisterTable(userTableName)
 class User extends Table {
@@ -47,7 +48,7 @@ const validUserDataset: Record<string, Partial<User>> = {
 };
 
 describe('Routes', () => {
-  it('accessing default routes', async () => await requestingDefaultRoutes());
+  it('accessing default routes', async () => requestingDefaultRoutes());
   it('accessing undefined route', async () => await requestingUndefinedRoute());
   it('using route get', async () => await usingRouteGet());
   it('using route list', async () => await usingRouteList());
@@ -87,7 +88,7 @@ async function _createDataController(testName: string, user: Partial<User>, rout
     declare email: string;
   }
   const userModel = new UserModel(Database(database_name));
-  await InitializeDatabase(database_name, { user: UserModel });
+  await InitializeDatabase(database_name, { [userTableName]: UserModel });
   const insertResult = await userModel.insert(user);
   return { id: insertResult.generated_keys![0], userModel };
 }

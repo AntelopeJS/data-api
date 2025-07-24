@@ -14,8 +14,9 @@ import { Access, AccessMode, Listable, ModelReference, Sortable } from '@ajs.loc
 import { getFunctionName, listRequest, request, validateObjectList } from '../utils';
 import path from 'node:path';
 
-const productTableName = 'products';
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const productTableName = `products-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
 @RegisterTable(productTableName)
 class Product extends Table {
@@ -127,7 +128,7 @@ async function _createDataController(testName: string, route: any, product: Part
     declare description: string;
   }
   const productModel = new ProductModel(Database(database_name));
-  await InitializeDatabase(database_name, { products: ProductModel });
+  await InitializeDatabase(database_name, { [productTableName]: ProductModel });
   const insertResults = await productModel.insert(product);
   return { ids: insertResults.generated_keys!, productModel };
 }

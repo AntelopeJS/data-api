@@ -14,8 +14,9 @@ import { Access, AccessMode, Mandatory, ModelReference } from '@ajs.local/data-a
 import { editRequest, getFunctionName, newRequest, request, validateObject } from '../utils';
 import path from 'node:path';
 
-const orderTableName = 'orders';
-const database_name = `test-data-api-${path.basename(__filename).replace(/\.test\.(ts|js)$/, '')}`;
+const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const orderTableName = `orders-${currentTestName}`;
+const database_name = `test-data-api-${currentTestName}`;
 
 @RegisterTable(orderTableName)
 class Order extends Table {
@@ -99,7 +100,7 @@ async function _createDataController(testName: string, route: any, order?: Parti
     declare internalReference: string;
   }
   const orderModel = new OrderModel(Database(database_name));
-  await InitializeDatabase(database_name, { order: OrderModel });
+  await InitializeDatabase(database_name, { [orderTableName]: OrderModel });
 
   if (order) {
     const insertResult = await orderModel.insert(order);

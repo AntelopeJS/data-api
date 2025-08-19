@@ -45,7 +45,7 @@
     ],
     "importsOptional": [],
     "test": {
-      "project": "testproject.js",
+      "project": "src/test/antelope.test.js",
       "folder": "dist/test"
     }
   },

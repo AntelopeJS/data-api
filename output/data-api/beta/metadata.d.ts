@@ -33,7 +33,7 @@ export interface FieldData {
      */
     mandatory?: Set<string>;
     /**
-     * Whether or not the DataAPI can be sorted using this field.
+     * Whether the DataAPI can be sorted using this field.
      */
     sortable?: {
         indexed?: boolean;
@@ -114,10 +114,11 @@ export declare class DataAPIMeta {
      */
     setMode(name: string, mode: AccessMode): this;
     /**
-     * Sets whether or not a field should be included in list endpoints.
+     * Sets whether a field should be included in list endpoints.
      *
      * @param name Field name
      * @param requiredFields Boolean or table field list
+     * @param mode List mode (default: 'list')
      */
     setListable(name: string, requiredFields: boolean | string[], mode?: string): this;
     /**

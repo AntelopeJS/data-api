@@ -175,27 +175,58 @@ export namespace Query {
     return obj[meta.modelKey];
   }
 
+  export function Foreign(db: Database, meta: DataAPIMeta, query: Stream, pluck?: Set<string>): Stream;
+  export function Foreign(db: Database, meta: DataAPIMeta, query: Datum, pluck?: Set<string>): Datum;
   export function Foreign(
     db: Database,
     meta: DataAPIMeta,
-    obj: ValueProxy.Proxy<Record<string, any>>,
+    query: Stream | Datum,
     pluck?: Set<string>,
-  ): ValueProxy.Proxy<Record<string, any>> {
-    const changedFields: Record<string, any> = {};
-    for (const [name, field] of Object.entries(meta.fields)) {
-      if (!field.foreign || (pluck && !pluck.has(name))) {
-        continue;
+  ): Stream | Datum {
+    /**/
+    if (query.lookup) {
+      for (const [name, field] of Object.entries(meta.fields)) {
+        if (!field.foreign || (pluck && !pluck.has(name))) {
+          continue;
+        }
+        const [table, index, multi, pluckField] = field.foreign!;
+        let other: Stream = db.table(table);
+        if (pluckField) {
+          other = other.pluck('_internal', ...pluckField);
+        }
+        query = query.lookup(other, name, index || '_id');
       }
-      const [table, index, multi] = field.foreign!;
-      if (multi) {
-        changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>)
-          .default([])
-          .map((val) => Get(db.table(table), val, index).default(null));
+      return query;
+    } else {
+      const oldForeign = (obj: ValueProxy.Proxy<Record<string, any>>) => {
+        const changedFields: Record<string, any> = {};
+        for (const [name, field] of Object.entries(meta.fields)) {
+          if (!field.foreign || (pluck && !pluck.has(name))) {
+            continue;
+          }
+          const [table, index, multi, pluckField] = field.foreign!;
+          if (multi) {
+            changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>)
+              .default([])
+              .map((val) => {
+                let foreignObject: Datum = Get(db.table(table), val, index);
+                if (pluckField) {
+                  foreignObject = foreignObject.pluck('_internal', ...pluckField)
+                }
+                return foreignObject.default(null);
+              });
+          } else {
+            changedFields[name] = Get(db.table(table), obj(name) as ValueProxy.Proxy<string>, index).default(null);
+          }
+        }
+        return obj.merge(changedFields);
+      }
+      if ('map' in query) {
+        return query.map(oldForeign as ValueProxy.Proxy<Record<string, any>>);
       } else {
-        changedFields[name] = Get(db.table(table), obj(name) as ValueProxy.Proxy<string>, index).default(null);
+        return query.do(oldForeign as ValueProxy.Proxy<Record<string, any>>);
       }
     }
-    return obj.merge(changedFields);
   }
 
   export async function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, onlyList?: boolean) {

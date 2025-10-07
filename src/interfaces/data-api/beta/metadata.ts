@@ -47,7 +47,7 @@ export interface FieldData {
   /**
    * Foreign key reference.
    */
-  foreign?: [table: string, index?: string, multi?: true];
+  foreign?: [table: string, index?: string, multi?: true, pluck?: string[]];
 
   /**
    * Value validator callback.
@@ -265,8 +265,8 @@ export class DataAPIMeta {
    * @param index Other table index
    * @param multi Index is a multi index
    */
-  public setForeign(name: string, table: string, index?: string, multi?: boolean) {
-    this.field(name).foreign = [table, index, multi || undefined];
+  public setForeign(name: string, table: string, index?: string, multi?: boolean, pluck?: string[]) {
+    this.field(name).foreign = [table, index, multi || undefined, pluck || undefined];
     return this;
   }
 
@@ -397,10 +397,10 @@ export const Sortable = MakeMethodAndPropertyDecorator((target, key, desc, optio
  * @param multi Index is a multi index
  */
 export const Foreign = MakeMethodAndPropertyDecorator(
-  (target, key, desc, table: string, index?: string, multi?: boolean) => {
+  (target, key, desc, table: string, index?: string, multi?: boolean, pluck?: string[]) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
-      .setForeign(key as string, table, index, multi);
+      .setForeign(key as string, table, index, multi, pluck);
   },
 );
 

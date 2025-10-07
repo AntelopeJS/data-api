@@ -23,17 +23,18 @@
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.6.5",
   "scripts": {
-    "build": "tsc",
-    "dev:prepare": "cd playground && ajs module imports update",
+    "build": "rm -rf dist && tsc",
+    "dev:prepare": "cd playground && ajs module imports install",
     "dev": "ajs project run -w -p playground",
     "format": "prettier --write .",
     "generate": "ajs module exports generate",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "prepack": "pnpm run build",
-    "prepare": "ajs module imports update",
+    "prepare": "ajs module imports install",
     "release": "pnpm run lint && pnpm run test && pnpm run prepack && release-it",
-    "test": "echo \"No test specified\""
+    "test": "pnpm run build && ajs module test",
+    "changelog": "changelogen"
   },
   "antelopeJs": {
     "exportsPath": "dist/interfaces",
@@ -43,21 +44,30 @@
       "database-decorators@beta",
       "core@beta"
     ],
-    "importsOptional": []
+    "importsOptional": [],
+    "test": {
+      "project": "src/test/antelope.test.js",
+      "folder": "dist/test"
+    }
   },
   "dependencies": {
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "chai": "^4.5.0",
+    "mocha": "^11.7.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.25.0",
-    "@release-it/conventional-changelog": "^10.0.1",
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.14.1",
+    "changelogen": "^0.6.2",
     "eslint": "^9.25.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.6",
     "globals": "^16.0.0",
+    "mongodb-memory-server-core": "^10.1.4",
     "prettier": "^3.5.3",
     "release-it": "^19.0.2",
     "typescript": "^5.8.3",

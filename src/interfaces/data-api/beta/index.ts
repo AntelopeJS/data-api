@@ -6,7 +6,7 @@ import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/be
 import { DataAPIMeta } from './metadata';
 import { assert, Parameters, Query, Validation } from './components';
 import assert_ from 'assert';
-import { triggerEvent } from '@ajs/database-decorators/beta';
+import { triggerEvent } from '@ajs/database-decorators/beta/modifiers/common';
 
 export type DataControllerCallback<O = any> = {
   args: (ParameterDecorator | ParameterDecorator[])[];

@@ -228,6 +228,7 @@ export namespace Query {
   ) {
     const instance: Record<string, any> = { ...obj };
     const dbData: Record<string, any> = existingDBData || {};
+    Object.setPrototypeOf(dbData, meta.tableClass.prototype);
     if (!existingDBData) {
       for (const [key, value] of Object.entries(new meta.target())) {
         if (value !== undefined) {

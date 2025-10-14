@@ -188,7 +188,7 @@ export namespace Query {
       if (!field.foreign || (pluck && !pluck.has(name))) {
         continue;
       }
-      const [table, index, multi] = field.foreign!;
+      const [table, index, multi] = field.foreign;
       if (multi) {
         changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>)
           .default([])
@@ -230,6 +230,7 @@ export namespace Query {
   ) {
     const instance: Record<string, any> = { ...obj };
     const dbData: Record<string, any> = existingDBData || {};
+    Object.setPrototypeOf(dbData, meta.tableClass.prototype);
     if (!existingDBData) {
       for (const [key, value] of Object.entries(new meta.target())) {
         if (value !== undefined) {

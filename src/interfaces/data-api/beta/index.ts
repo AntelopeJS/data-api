@@ -6,6 +6,7 @@ import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/be
 import { DataAPIMeta } from './metadata';
 import { assert, Parameters, Query, Validation } from './components';
 import assert_ from 'assert';
+import { triggerEvent } from '@ajs/database-decorators/beta/modifiers/common';
 
 export type DataControllerCallback<O = any> = {
   args: (ParameterDecorator | ParameterDecorator[])[];
@@ -187,6 +188,7 @@ export namespace DefaultRoutes {
       const dbData = await Query.WriteProperties(this, meta, data);
 
       const model = Query.GetModel(this, meta);
+      triggerEvent(dbData, 'insert');
       const dbResult = await model.table.insert(dbData);
 
       return dbResult.generated_keys;
@@ -209,6 +211,7 @@ export namespace DefaultRoutes {
 
       const dbData = await Query.WriteProperties(this, meta, data, dbResultPrevious);
 
+      triggerEvent(dbData, 'update');
       await model.table.get(params.id).update(dbData);
     }
 

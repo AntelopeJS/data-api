@@ -328,8 +328,16 @@ export namespace Validation {
     }
   }
 
-  export function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, row: ValueProxy.Proxy<T>, field: K): ValueProxy.Proxy<T[K]> {
-    const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({modifier, args: [obj[field]]}));
+  export function UnlockRequest<T extends {}, K extends keyof T>(
+    obj: any,
+    meta: DataAPIMeta,
+    row: ValueProxy.Proxy<T>,
+    field: K,
+  ): ValueProxy.Proxy<T[K]> {
+    const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({
+      modifier,
+      args: [obj[field]],
+    }));
     return unlockrequest(meta.tableClass as Constructible<T>, row, field, modifiers);
   }
 

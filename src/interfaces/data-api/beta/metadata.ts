@@ -73,7 +73,7 @@ export type FilterFunction<T extends Record<string, any>, U extends Record<strin
   key: string,
   value: FilterValue[0],
   mode: FilterValue[1],
-  row: ValueProxy.Proxy<U>
+  row: ValueProxy.Proxy<U>,
 ) => ValueProxy.ProxyOrVal<boolean>;
 
 /**
@@ -327,7 +327,6 @@ export class DataAPIMeta {
     return this;
   }
 
-
   /**
    * Sets the key containing the key for the given database modifier.
    *
@@ -480,9 +479,9 @@ export const ModelReference = MakePropertyDecorator((target, key) => {
 
 /**
  * Sets which field will contain the key for the given database modifier.
- * 
+ *
  * @param modifierClass Modifier
  */
 export const ModifierKey = MakePropertyDecorator((target, key, modifierClass: typeof ContainerModifier<any>) => {
   GetMetadata(target.constructor, DataAPIMeta).setModifierKey(key as string, modifierClass);
-})
+});

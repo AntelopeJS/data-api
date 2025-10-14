@@ -183,9 +183,9 @@ export namespace DefaultRoutes {
         Validation.MandatoryFields(meta, data, 'new');
       }
       Validation.ValidateTypes(meta, data);
-      Validation.Lock(this, meta, data);
 
       const dbData = await Query.WriteProperties(this, meta, data);
+      Validation.Lock(this, meta, dbData);
 
       const model = Query.GetModel(this, meta);
       triggerEvent(dbData, 'insert');
@@ -202,7 +202,6 @@ export namespace DefaultRoutes {
         Validation.MandatoryFields(meta, data, 'edit');
       }
       Validation.ValidateTypes(meta, data);
-      Validation.Lock(this, meta, data);
 
       const model = Query.GetModel(this, meta);
 
@@ -210,6 +209,7 @@ export namespace DefaultRoutes {
       const dbResultPrevious = await queryPrevious;
 
       const dbData = await Query.WriteProperties(this, meta, data, dbResultPrevious);
+      Validation.Lock(this, meta, dbData);
 
       triggerEvent(dbData, 'update');
       await model.table.get(params.id).update(dbData);

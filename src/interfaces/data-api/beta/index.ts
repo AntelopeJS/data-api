@@ -1,7 +1,7 @@
 import { GetMetadata } from '@ajs/core/beta';
 import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/decorators';
 import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
-import { Datum, ValueProxy } from '@ajs/database/beta';
+import { Datum } from '@ajs/database/beta';
 import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/beta/schema';
 import { DataAPIMeta } from './metadata';
 import { assert, Parameters, Query, Validation } from './components';

@@ -55,7 +55,8 @@ export declare namespace Query {
     function GetModel(obj: any, meta: DataAPIMeta): InstanceType<DataModel> & {
         constructor: DataModel;
     };
-    function Foreign(db: Database, meta: DataAPIMeta, obj: ValueProxy.Proxy<Record<string, any>>, pluck?: Set<string>): ValueProxy.Proxy<Record<string, any>>;
+    function Foreign(db: Database, meta: DataAPIMeta, query: Stream, pluck?: Set<string>): Stream;
+    function Foreign(db: Database, meta: DataAPIMeta, query: Datum, pluck?: Set<string>): Datum;
     function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, onlyList?: boolean): Promise<Record<string, any>>;
     function WriteProperties(obj: any, meta: DataAPIMeta, bodyData: Record<string, any>, existingDBData?: Record<string, any>): Promise<Record<string, any>>;
     function Get(table: Table, id: string | ValueProxy.Proxy<string>, index?: string): import("@ajs/database/beta").SingleSelection<any>;

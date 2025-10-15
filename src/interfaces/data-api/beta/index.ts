@@ -1,7 +1,7 @@
 import { GetMetadata } from '@ajs/core/beta';
 import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/decorators';
 import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
-import { Datum, ValueProxy } from '@ajs/database/beta';
+import { Datum } from '@ajs/database/beta';
 import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/beta/schema';
 import { DataAPIMeta } from './metadata';
 import { assert, Parameters, Query, Validation } from './components';
@@ -111,7 +111,7 @@ export namespace DefaultRoutes {
       let query = Query.Get(model.table, params.id, params.index) as Datum;
 
       if (!params.noForeign) {
-        query = query.do((val) => Query.Foreign(model.database, meta, val as ValueProxy.Proxy<Record<string, any>>));
+        query = Query.Foreign(model.database, meta, query);
       }
 
       const dbResult = model.constructor.fromDatabase(await query);
@@ -137,14 +137,7 @@ export namespace DefaultRoutes {
       assert(params.noPluck || pluck, `No fields found for pluckMode '${params.pluckMode ?? 'list'}'`);
 
       if (!params.noForeign) {
-        query = query.map((val) =>
-          Query.Foreign(
-            model.database,
-            meta,
-            val as ValueProxy.Proxy<Record<string, any>>,
-            params.noPluck ? undefined : pluck,
-          ),
-        );
+        query = Query.Foreign(model.database, meta, query, params.noPluck ? undefined : pluck);
       }
 
       const offset = params.offset || 0;

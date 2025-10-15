@@ -41,7 +41,7 @@ export interface FieldData {
     /**
      * Foreign key reference.
      */
-    foreign?: [table: string, index?: string, multi?: true];
+    foreign?: [table: string, index?: string, multi?: true, pluck?: string[]];
     /**
      * Value validator callback.
      */
@@ -145,7 +145,7 @@ export declare class DataAPIMeta {
      * @param index Other table index
      * @param multi Index is a multi index
      */
-    setForeign(name: string, table: string, index?: string, multi?: boolean): this;
+    setForeign(name: string, table: string, index?: string, multi?: boolean, pluck?: string[]): this;
     /**
      * Set the validation function of a field.
      *
@@ -224,7 +224,7 @@ export declare const Sortable: (options?: {
  * @param index Other table index
  * @param multi Index is a multi index
  */
-export declare const Foreign: (table: string, index?: string | undefined, multi?: boolean | undefined) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
+export declare const Foreign: (table: string, index?: string | undefined, multi?: boolean | undefined, pluck?: string[] | undefined) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
 /**
  * Set the validation function of a field.
  *

@@ -3,6 +3,7 @@ import { Class, MakeMethodAndPropertyDecorator, MakePropertyDecorator } from '@a
 import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
+import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
 
 /**
  * Field access mode enum.
@@ -61,16 +62,18 @@ export interface FieldData {
 }
 
 type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
-export type FilterValue = [value: any, mode: Comparison];
+export type FilterValue = [value: string, mode: Comparison];
 
 /**
  * Filter callback.
  */
-export type FilterFunction<T extends Record<string, any>, U = any> = (
+export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (
   context: RequestContext & { this: T },
-  row: ValueProxy.Proxy<U>,
+  proxy: ValueProxy.Proxy<any>,
   key: string,
-  ...args: FilterValue
+  value: FilterValue[0],
+  mode: FilterValue[1],
+  row: ValueProxy.Proxy<U>,
 ) => ValueProxy.ProxyOrVal<boolean>;
 
 /**
@@ -98,6 +101,11 @@ export class DataAPIMeta {
    * Key of the DataAPI class containing a database table instance.
    */
   public modelKey?: string;
+
+  /**
+   * Keys of the DataAPI class containing database modifier keys.
+   */
+  public modifierKeys = new Map<typeof ContainerModifier<any>, string>();
 
   /**
    * Database Schema class.
@@ -147,8 +155,13 @@ export class DataAPIMeta {
     for (const [key, list] of Object.entries(parent.pluck)) {
       this.pluck[key] = new Set(list);
     }
-    if (!('tableKey' in this)) {
+    if (!('modelKey' in this)) {
       this.modelKey = parent.modelKey;
+    }
+    for (const key of parent.modifierKeys.keys()) {
+      if (!this.modifierKeys.has(key)) {
+        this.modifierKeys.set(key, parent.modifierKeys.get(key)!);
+      }
     }
     merge(parent.readable, this.readable);
     merge(parent.writable, this.writable);
@@ -315,6 +328,17 @@ export class DataAPIMeta {
   }
 
   /**
+   * Sets the key containing the key for the given database modifier.
+   *
+   * @param name Field name
+   * @param modifierClass Modifier
+   */
+  public setModifierKey(name: string, modifierClass: typeof ContainerModifier<any>) {
+    this.modifierKeys.set(modifierClass, name);
+    return this;
+  }
+
+  /**
    * Adds the given endpoint to the DataAPI
    *
    * @param key field name
@@ -427,21 +451,20 @@ export const Filter: <T extends Record<string, any>>(
   GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
     key as string,
     func ||
-      ((_context, row, key, val, mode) => {
-        const dbVal = row(key) as ValueProxy.Proxy<number>;
+      ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
         switch (mode) {
           case 'ne':
-            return dbVal.ne(val);
+            return proxy.ne(val);
           case 'gt':
-            return dbVal.gt(val);
+            return proxy.gt(val);
           case 'ge':
-            return dbVal.ge(val);
+            return proxy.ge(val);
           case 'lt':
-            return dbVal.lt(val);
+            return proxy.lt(val);
           case 'le':
-            return dbVal.le(val);
+            return proxy.le(val);
           default:
-            return dbVal.eq(val);
+            return proxy.eq(val);
         }
       }),
   );
@@ -454,4 +477,11 @@ export const ModelReference = MakePropertyDecorator((target, key) => {
   GetMetadata(target.constructor, DataAPIMeta).setModelKey(key as string);
 });
 
-// Validator
+/**
+ * Sets which field will contain the key for the given database modifier.
+ *
+ * @param modifierClass Modifier
+ */
+export const ModifierKey = MakePropertyDecorator((target, key, modifierClass: typeof ContainerModifier<any>) => {
+  GetMetadata(target.constructor, DataAPIMeta).setModifierKey(key as string, modifierClass);
+});

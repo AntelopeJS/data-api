@@ -4,6 +4,8 @@ import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { DataAPIMeta, FilterValue } from './metadata';
 import { GetDataControllerMeta } from '.';
+import { lock, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
+import { Constructible } from '@ajs/database-decorators/beta/common';
 
 export function assert(condition: any, err: string, errCode = 400): asserts condition {
   if (!condition) {
@@ -294,14 +296,17 @@ export namespace Query {
     }
     const filterList = Object.entries(meta.filters).filter(([name]) => filters && name in filters);
     if (filterList.length > 0) {
+      // TODO: rework for modifier-affected fields (unlockrequest)
       tmpRequest = filterList.reduce(
         (req, [name, filter]) =>
           req.filter((row) =>
             filter(
               Object.assign(reqCtx, { this: obj }),
-              row as ValueProxy.Proxy<Record<string, any>>,
+              Validation.UnlockRequest(obj, meta, row, name),
               name,
-              ...filters![name],
+              filters![name][0],
+              filters![name][1],
+              row as ValueProxy.Proxy<Record<string, any>>,
             ),
           ),
         tmpRequest,
@@ -331,6 +336,33 @@ export namespace Validation {
       .filter(([name, field]) => field.validator && name in obj && !field.validator(obj[name]))
       .map(([name]) => name);
     assert(invalid.length === 0, `Invalid field type(s): ${invalid.join(', ')}`);
+  }
+
+  export function Lock(obj: any, meta: DataAPIMeta, data: any) {
+    for (const [modifier, field] of meta.modifierKeys.entries()) {
+      const key = obj[field];
+      lock(data, modifier, undefined, key);
+    }
+  }
+
+  export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
+    for (const [modifier, field] of meta.modifierKeys.entries()) {
+      const key = obj[field];
+      unlock(dbData, modifier, undefined, key);
+    }
+  }
+
+  export function UnlockRequest<T extends {}, K extends keyof T>(
+    obj: any,
+    meta: DataAPIMeta,
+    row: ValueProxy.Proxy<T>,
+    field: K,
+  ): ValueProxy.Proxy<T[K]> {
+    const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({
+      modifier,
+      args: [obj[field]],
+    }));
+    return unlockrequest(meta.tableClass as Constructible<T>, row, field, modifiers);
   }
 
   export function ClearInternal(meta: DataAPIMeta, obj: Record<string, any> | Array<Record<string, any>>) {

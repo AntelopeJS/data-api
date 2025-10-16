@@ -2,6 +2,7 @@ import { Class } from '@ajs/core/beta/decorators';
 import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
+import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
 /**
  * Field access mode enum.
  */
@@ -52,13 +53,13 @@ export interface FieldData {
     desc?: PropertyDescriptor;
 }
 type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
-export type FilterValue = [value: any, mode: Comparison];
+export type FilterValue = [value: string, mode: Comparison];
 /**
  * Filter callback.
  */
-export type FilterFunction<T extends Record<string, any>, U = any> = (context: RequestContext & {
+export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (context: RequestContext & {
     this: T;
-}, row: ValueProxy.Proxy<U>, key: string, ...args: FilterValue) => ValueProxy.ProxyOrVal<boolean>;
+}, proxy: ValueProxy.Proxy<any>, key: string, value: FilterValue[0], mode: FilterValue[1], row: ValueProxy.Proxy<U>) => ValueProxy.ProxyOrVal<boolean>;
 /**
  * Metadata Class containing the DataAPI information.
  */
@@ -81,6 +82,10 @@ export declare class DataAPIMeta {
      * Key of the DataAPI class containing a database table instance.
      */
     modelKey?: string;
+    /**
+     * Keys of the DataAPI class containing database modifier keys.
+     */
+    modifierKeys: Map<typeof ContainerModifier<any>, string>;
     /**
      * Database Schema class.
      */
@@ -174,6 +179,13 @@ export declare class DataAPIMeta {
      */
     setModelKey(name: string): this;
     /**
+     * Sets the key containing the key for the given database modifier.
+     *
+     * @param name Field name
+     * @param modifierClass Modifier
+     */
+    setModifierKey(name: string, modifierClass: typeof ContainerModifier<any>): this;
+    /**
      * Adds the given endpoint to the DataAPI
      *
      * @param key field name
@@ -241,4 +253,10 @@ export declare const Filter: <T extends Record<string, any>>(func?: FilterFuncti
  * Sets which field will contain the reference to the database model instance.
  */
 export declare const ModelReference: () => import("@ajs/core/beta/decorators").PropertyDecorator;
+/**
+ * Sets which field will contain the key for the given database modifier.
+ *
+ * @param modifierClass Modifier
+ */
+export declare const ModifierKey: (modifierClass: typeof ContainerModifier<any>) => import("@ajs/core/beta/decorators").PropertyDecorator;
 export {};

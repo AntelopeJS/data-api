@@ -153,8 +153,9 @@ export namespace DefaultRoutes {
 
       const results = await Promise.all(
         dbResult.map((entry) => {
-          Validation.Unlock(this, meta, entry);
-          return Query.ReadProperties(this, meta, model.constructor.fromDatabase(entry));
+          const entryInstance = model.constructor.fromDatabase(entry);
+          Validation.Unlock(this, meta, entryInstance);
+          return Query.ReadProperties(this, meta, entryInstance);
         }),
       );
 

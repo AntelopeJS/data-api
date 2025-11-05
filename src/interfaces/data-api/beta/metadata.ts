@@ -4,6 +4,7 @@ import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
 import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
+import { GetTablesFromSchema, Table } from '@ajs/database-decorators/beta';
 
 /**
  * Field access mode enum.
@@ -48,7 +49,7 @@ export interface FieldData {
   /**
    * Foreign key reference.
    */
-  foreign?: [table: string, index?: string, multi?: true, pluck?: string[]];
+  foreign?: [table: string, tableClass?: Class<Table>, index?: string, multi?: true, pluck?: string[]];
 
   /**
    * Value validator callback.
@@ -106,6 +107,11 @@ export class DataAPIMeta {
    * Keys of the DataAPI class containing database modifier keys.
    */
   public modifierKeys = new Map<typeof ContainerModifier<any>, string>();
+
+  /**
+   * Schema name where the table is registered.
+   */
+  public schemaName!: string;
 
   /**
    * Database Schema class.
@@ -279,8 +285,17 @@ export class DataAPIMeta {
    * @param index Other table index
    * @param multi Index is a multi index
    */
-  public setForeign(name: string, table: string, index?: string, multi?: boolean, pluck?: string[]) {
-    this.field(name).foreign = [table, index, multi || undefined, pluck || undefined];
+  public setForeign(name: string, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]) {
+    const databaseSchema = GetTablesFromSchema(this.schemaName);
+    if (typeof table === 'string') {
+      this.field(name).foreign = [table, databaseSchema[table], index, multi || undefined, pluck || undefined];
+    } else {
+      const tableName = Object.entries(databaseSchema)
+        .filter(([, table_]) => table_ === table)
+        .map(([name]) => name)[0];
+
+      this.field(name).foreign = [tableName, table, index, multi || undefined, pluck || undefined];
+    }
     return this;
   }
 
@@ -422,7 +437,7 @@ export const Sortable = MakeMethodAndPropertyDecorator((target, key, desc, optio
  * @param multi Index is a multi index
  */
 export const Foreign = MakeMethodAndPropertyDecorator(
-  (target, key, desc, table: string, index?: string, multi?: boolean, pluck?: string[]) => {
+  (target, key, desc, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
       .setForeign(key as string, table, index, multi, pluck);

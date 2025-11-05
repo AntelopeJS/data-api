@@ -186,7 +186,7 @@ export namespace Query {
         if (!field.foreign || (pluck && !pluck.has(name))) {
           continue;
         }
-        const [table, index, _multi, pluckField] = field.foreign;
+        const [table, _tableClass, index, _multi, pluckField] = field.foreign;
         let other: Stream = db.table(table);
         if (pluckField) {
           other = other.pluck('_internal', ...pluckField);
@@ -201,7 +201,7 @@ export namespace Query {
           if (!field.foreign || (pluck && !pluck.has(name))) {
             continue;
           }
-          const [table, index, multi, pluckField] = field.foreign;
+          const [table, _tableClass, index, multi, pluckField] = field.foreign;
           if (multi) {
             changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>).default([]).map((val) => {
               let foreignObject: Datum = Get(db.table(table), val, index);
@@ -233,6 +233,11 @@ export namespace Query {
       }
       instance[key] = dbData[field.dbName || key];
       res[key] = dbData[field.dbName || key];
+    }
+    for (const [name, field] of Object.entries(meta.fields)) {
+      if (field.foreign && typeof dbData[name] !== 'object' && field.foreign[1]) {
+        Object.setPrototypeOf(dbData[name], field.foreign[1].prototype);
+      }
     }
     instance.table = dbData;
     Object.setPrototypeOf(instance, meta.target.prototype);
@@ -349,6 +354,11 @@ export namespace Validation {
     for (const [modifier, field] of meta.modifierKeys.entries()) {
       const key = obj[field];
       unlock(dbData, modifier, undefined, key);
+      for (const [foreign, fieldData] of Object.entries(meta.fields)) {
+        if (fieldData.foreign && typeof dbData[foreign] === 'object') {
+          unlock(dbData[foreign], modifier, undefined, key);
+        }
+      }
     }
   }
 

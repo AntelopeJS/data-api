@@ -47,8 +47,9 @@ export function DataController<
     table!: InstanceType<C>;
   };
   const meta = GetMetadata(c, DataAPIMeta);
+  meta.schemaName = schemaName || String(DEFAULT_SCHEMA);
 
-  const databaseSchema = GetTablesFromSchema(schemaName || String(DEFAULT_SCHEMA));
+  const databaseSchema = GetTablesFromSchema(meta.schemaName);
   assert_(databaseSchema, 'Non-existent Database Schema');
 
   const tableName = Object.entries(databaseSchema)

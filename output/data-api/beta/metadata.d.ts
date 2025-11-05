@@ -3,6 +3,7 @@ import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
 import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
+import { Table } from '@ajs/database-decorators/beta';
 /**
  * Field access mode enum.
  */
@@ -42,7 +43,7 @@ export interface FieldData {
     /**
      * Foreign key reference.
      */
-    foreign?: [table: string, index?: string, multi?: true, pluck?: string[]];
+    foreign?: [table: string, tableClass?: Class<Table>, index?: string, multi?: true, pluck?: string[]];
     /**
      * Value validator callback.
      */
@@ -86,6 +87,10 @@ export declare class DataAPIMeta {
      * Keys of the DataAPI class containing database modifier keys.
      */
     modifierKeys: Map<typeof ContainerModifier<any>, string>;
+    /**
+     * Schema name where the table is registered.
+     */
+    schemaName: string;
     /**
      * Database Schema class.
      */
@@ -150,7 +155,7 @@ export declare class DataAPIMeta {
      * @param index Other table index
      * @param multi Index is a multi index
      */
-    setForeign(name: string, table: string, index?: string, multi?: boolean, pluck?: string[]): this;
+    setForeign(name: string, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]): this;
     /**
      * Set the validation function of a field.
      *
@@ -236,7 +241,7 @@ export declare const Sortable: (options?: {
  * @param index Other table index
  * @param multi Index is a multi index
  */
-export declare const Foreign: (table: string, index?: string | undefined, multi?: boolean | undefined, pluck?: string[] | undefined) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
+export declare const Foreign: (table: string | Class<Table>, index?: string | undefined, multi?: boolean | undefined, pluck?: string[] | undefined) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
 /**
  * Set the validation function of a field.
  *

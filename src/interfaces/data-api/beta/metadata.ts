@@ -174,6 +174,7 @@ export class DataAPIMeta {
     merge(parent.endpoints, this.endpoints);
     this.tableClass = parent.tableClass;
     this.tableName = parent.tableName;
+    this.schemaName = parent.schemaName;
   }
 
   private field(name: string) {

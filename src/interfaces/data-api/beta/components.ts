@@ -4,7 +4,7 @@ import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { DataAPIMeta, FilterValue } from './metadata';
 import { GetDataControllerMeta } from '.';
-import { lock, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
+import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
 
 export function assert(condition: any, err: string, errCode = 400): asserts condition {
@@ -234,11 +234,6 @@ export namespace Query {
       instance[key] = dbData[field.dbName || key];
       res[key] = dbData[field.dbName || key];
     }
-    for (const [name, field] of Object.entries(meta.fields)) {
-      if (field.foreign && typeof dbData[name] !== 'object' && field.foreign[1]) {
-        Object.setPrototypeOf(dbData[name], field.foreign[1].prototype);
-      }
-    }
     instance.table = dbData;
     Object.setPrototypeOf(instance, meta.target.prototype);
     for (const [key, field] of meta.readable.getters) {
@@ -351,6 +346,11 @@ export namespace Validation {
   }
 
   export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
+    for (const [name, field] of Object.entries(meta.fields)) {
+      if (field.foreign && typeof dbData[name] === 'object' && field.foreign[1]) {
+        dbData[name] = fromDatabase(dbData[name], field.foreign[1]);
+      }
+    }
     for (const [modifier, field] of meta.modifierKeys.entries()) {
       const key = obj[field];
       unlock(dbData, modifier, undefined, key);
@@ -381,9 +381,16 @@ export namespace Validation {
     const foreignFields = Object.entries(meta.fields).filter(([, field]) => field.foreign);
     for (const entry of results) {
       delete entry._internal;
-      for (const [name] of foreignFields) {
-        if (typeof entry[name] === 'object') {
-          delete entry[name]._internal;
+      for (const [name, { foreign }] of foreignFields) {
+        if (foreign && entry[name] && typeof entry[name] === 'object') {
+          entry[name] = toPlainData(entry[name]);
+          if (foreign?.[4]) {
+            const result: Record<string, unknown> = {};
+            for (const key of foreign![4]) {
+              result[key] = entry[name][key];
+            }
+            entry[name] = result;
+          }
         }
       }
     }

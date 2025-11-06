@@ -386,7 +386,7 @@ export namespace Validation {
           entry[name] = toPlainData(entry[name]);
           if (foreign?.[4]) {
             const result: Record<string, unknown> = {};
-            for (const key of foreign![4]) {
+            for (const key of foreign[4]) {
               result[key] = entry[name][key];
             }
             entry[name] = result;

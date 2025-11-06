@@ -52,9 +52,7 @@ export function DataController<
   const databaseSchema = GetTablesFromSchema(meta.schemaName);
   assert_(databaseSchema, 'Non-existent Database Schema');
 
-  const tableName = Object.entries(databaseSchema)
-    .filter(([, table]) => table === tableClass)
-    .map(([name]) => name)[0];
+  const tableName = Object.entries(databaseSchema).find(([, table]) => table === tableClass)?.[0];
   assert_(tableName, 'Unregistered Database Table');
 
   meta.tableClass = tableClass;

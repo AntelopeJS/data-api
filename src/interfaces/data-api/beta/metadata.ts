@@ -291,9 +291,7 @@ export class DataAPIMeta {
     if (typeof table === 'string') {
       this.field(name).foreign = [table, databaseSchema[table], index, multi || undefined, pluck || undefined];
     } else {
-      const tableName = Object.entries(databaseSchema)
-        .filter(([, table_]) => table_ === table)
-        .map(([name]) => name)[0];
+      const tableName = Object.entries(databaseSchema).find(([, table_]) => table_ === table)?.[0]!;
 
       this.field(name).foreign = [tableName, table, index, multi || undefined, pluck || undefined];
     }

@@ -4,7 +4,7 @@ import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { DataAPIMeta, FilterValue } from './metadata';
 import { GetDataControllerMeta } from '.';
-import { lock, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
+import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
 
 export function assert(condition: any, err: string, errCode = 400): asserts condition {
@@ -186,7 +186,7 @@ export namespace Query {
         if (!field.foreign || (pluck && !pluck.has(name))) {
           continue;
         }
-        const [table, index, _multi, pluckField] = field.foreign;
+        const [table, _tableClass, index, _multi, pluckField] = field.foreign;
         let other: Stream = db.table(table);
         if (pluckField) {
           other = other.pluck('_internal', ...pluckField);
@@ -201,7 +201,7 @@ export namespace Query {
           if (!field.foreign || (pluck && !pluck.has(name))) {
             continue;
           }
-          const [table, index, multi, pluckField] = field.foreign;
+          const [table, _tableClass, index, multi, pluckField] = field.foreign;
           if (multi) {
             changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>).default([]).map((val) => {
               let foreignObject: Datum = Get(db.table(table), val, index);
@@ -346,9 +346,19 @@ export namespace Validation {
   }
 
   export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
+    for (const [name, field] of Object.entries(meta.fields)) {
+      if (field.foreign && typeof dbData[name] === 'object' && field.foreign[1]) {
+        dbData[name] = fromDatabase(dbData[name], field.foreign[1]);
+      }
+    }
     for (const [modifier, field] of meta.modifierKeys.entries()) {
       const key = obj[field];
       unlock(dbData, modifier, undefined, key);
+      for (const [foreign, fieldData] of Object.entries(meta.fields)) {
+        if (fieldData.foreign && typeof dbData[foreign] === 'object') {
+          unlock(dbData[foreign], modifier, undefined, key);
+        }
+      }
     }
   }
 
@@ -371,9 +381,16 @@ export namespace Validation {
     const foreignFields = Object.entries(meta.fields).filter(([, field]) => field.foreign);
     for (const entry of results) {
       delete entry._internal;
-      for (const [name] of foreignFields) {
-        if (typeof entry[name] === 'object') {
-          delete entry[name]._internal;
+      for (const [name, { foreign }] of foreignFields) {
+        if (foreign && entry[name] && typeof entry[name] === 'object') {
+          entry[name] = toPlainData(entry[name]);
+          if (foreign?.[4]) {
+            const result: Record<string, unknown> = {};
+            for (const key of foreign[4]) {
+              result[key] = entry[name][key];
+            }
+            entry[name] = result;
+          }
         }
       }
     }

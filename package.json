@@ -33,8 +33,7 @@
     "prepack": "pnpm run build",
     "prepare": "ajs module imports install",
     "release": "pnpm run lint && pnpm run test && pnpm run prepack && release-it",
-    "test": "pnpm run build && ajs module test",
-    "changelog": "changelogen"
+    "test": "pnpm run build && ajs module test"
   },
   "antelopeJs": {
     "exportsPath": "dist/interfaces",
@@ -51,9 +50,9 @@
     }
   },
   "dependencies": {
-    "reflect-metadata": "^0.2.2",
     "chai": "^4.5.0",
-    "mocha": "^11.7.1"
+    "mocha": "^11.7.1",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -61,7 +60,6 @@
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.14.1",
-    "changelogen": "^0.6.2",
     "eslint": "^9.25.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
@@ -70,6 +68,7 @@
     "mongodb-memory-server-core": "^10.1.4",
     "prettier": "^3.5.3",
     "release-it": "^19.0.2",
+    "release-it-changelogen": "^0.1.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1"
   }

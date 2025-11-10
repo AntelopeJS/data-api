@@ -1,6 +1,6 @@
 {
   "name": "@antelopejs/data-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A flexible DataAPI interface for antelopejs that uses the API interface",
   "keywords": [
     "antelopejs",

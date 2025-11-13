@@ -348,7 +348,9 @@ export namespace Validation {
   export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
     for (const [name, field] of Object.entries(meta.fields)) {
       if (field.foreign && typeof dbData[name] === 'object' && field.foreign[1]) {
-        dbData[name] = fromDatabase(dbData[name], field.foreign[1]);
+        dbData[name] = Array.isArray(dbData[name])
+          ? dbData[name].map((entry) => fromDatabase(entry, field.foreign![1]!))
+          : fromDatabase(dbData[name], field.foreign[1]);
       }
     }
     for (const [modifier, field] of meta.modifierKeys.entries()) {
@@ -382,15 +384,24 @@ export namespace Validation {
     for (const entry of results) {
       delete entry._internal;
       for (const [name, { foreign }] of foreignFields) {
-        if (foreign && entry[name] && typeof entry[name] === 'object') {
-          entry[name] = toPlainData(entry[name]);
-          if (foreign?.[4]) {
-            const result: Record<string, unknown> = {};
-            for (const key of foreign[4]) {
-              result[key] = entry[name][key];
+        if (
+          foreign &&
+          entry[name] &&
+          typeof entry[name] === 'object' &&
+          (!Array.isArray(entry[name]) || typeof entry[name][0] === 'object')
+        ) {
+          const processForeign = (data: any) => {
+            const plain = toPlainData(data);
+            if (!foreign?.[4]) {
+              return plain;
             }
-            entry[name] = result;
-          }
+            const plainPlucked: Record<string, unknown> = {};
+            for (const key of foreign[4]) {
+              plainPlucked[key] = plain[key];
+            }
+            return plainPlucked;
+          };
+          entry[name] = Array.isArray(entry[name]) ? entry[name].map(processForeign) : processForeign(entry[name]);
         }
       }
     }

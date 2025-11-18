@@ -347,7 +347,7 @@ export namespace Validation {
 
   export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
     for (const [name, field] of Object.entries(meta.fields)) {
-      if (field.foreign && typeof dbData[name] === 'object' && field.foreign[1]) {
+      if (field.foreign && dbData[name] && typeof dbData[name] === 'object' && field.foreign[1]) {
         dbData[name] = Array.isArray(dbData[name])
           ? dbData[name].map((entry) => fromDatabase(entry, field.foreign![1]!))
           : fromDatabase(dbData[name], field.foreign[1]);

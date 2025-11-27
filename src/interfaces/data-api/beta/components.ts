@@ -284,7 +284,7 @@ export namespace Query {
   export function List<T extends Record<string, any>>(
     obj: any,
     meta: DataAPIMeta,
-    request: Stream<T>,
+    request: Table<T>,
     reqCtx: RequestContext,
     sorting?: [string, 'asc' | 'desc' | undefined],
     filters?: Record<string, FilterValue>,

@@ -289,26 +289,32 @@ export namespace Query {
     sorting?: [string, 'asc' | 'desc' | undefined],
     filters?: Record<string, FilterValue>,
   ): [sorted: Stream<T>, total: Datum<number>] {
-    let tmpRequest = request;
+    const filterList = Object.entries(meta.filters).filter(([name]) => filters && name in filters);
+    const indexFilter = filterList.find(([name]) => filters![name][1] === 'eq' && meta.fields[name]?.indexable)?.[0];
+    const index = indexFilter ? meta.fields[indexFilter].dbName || indexFilter : undefined;
+
+    let tmpRequest = index ? request.getAll(index, filters![indexFilter!][0]) : request;
+
     const shouldSort = sorting && meta.fields[sorting[0]]?.sortable;
     if (shouldSort && shouldSort.indexed) {
       tmpRequest = tmpRequest.orderBy(sorting[0] as keyof T, sorting[1] ?? 'asc', false);
     }
-    const filterList = Object.entries(meta.filters).filter(([name]) => filters && name in filters);
     if (filterList.length > 0) {
       // TODO: rework for modifier-affected fields (unlockrequest)
       tmpRequest = filterList.reduce(
         (req, [name, filter]) =>
-          req.filter((row) =>
-            filter(
-              Object.assign(reqCtx, { this: obj }),
-              Validation.UnlockRequest(obj, meta, row, name),
-              name,
-              filters![name][0],
-              filters![name][1],
-              row as ValueProxy.Proxy<Record<string, any>>,
-            ),
-          ),
+          name === indexFilter
+            ? req
+            : req.filter((row) =>
+                filter(
+                  Object.assign(reqCtx, { this: obj }),
+                  Validation.UnlockRequest(obj, meta, row, name),
+                  name,
+                  filters![name][0],
+                  filters![name][1],
+                  row as ValueProxy.Proxy<Record<string, any>>,
+                ),
+              ),
         tmpRequest,
       );
     }

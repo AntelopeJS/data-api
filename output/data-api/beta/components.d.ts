@@ -65,7 +65,7 @@ export declare namespace Query {
 }
 export declare namespace Validation {
     function MandatoryFields(meta: DataAPIMeta, obj: any, type: string): void;
-    function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>): void;
+    function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>): Promise<void>;
     function Lock(obj: any, meta: DataAPIMeta, data: any): void;
     function Unlock(obj: any, meta: DataAPIMeta, dbData: any): void;
     function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, row: ValueProxy.Proxy<T>, field: K): ValueProxy.Proxy<T[K]>;

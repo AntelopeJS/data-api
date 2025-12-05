@@ -54,7 +54,7 @@ export interface FieldData {
   /**
    * Value validator callback.
    */
-  validator?: (value: unknown) => boolean;
+  validator?: (value: unknown) => boolean | Promise<boolean>;
 
   /**
    * Field property descriptor.
@@ -304,7 +304,7 @@ export class DataAPIMeta {
    * @param name Field name
    * @param validator Value validator callback
    */
-  public setValidator(name: string, validator?: (value: unknown) => boolean) {
+  public setValidator(name: string, validator?: (value: unknown) => boolean | Promise<boolean>) {
     this.field(name).validator = validator;
     return this;
   }
@@ -448,7 +448,7 @@ export const Foreign = MakeMethodAndPropertyDecorator(
  *
  * @param validator Value validator callback
  */
-export const Validator = MakeMethodAndPropertyDecorator((target, key, desc, validator: (val: unknown) => boolean) => {
+export const Validator = MakeMethodAndPropertyDecorator((target, key, desc, validator: (val: unknown) => boolean | Promise<boolean>) => {
   GetMetadata(target.constructor, DataAPIMeta)
     .setDescriptor(key as string, desc)
     .setValidator(key as string, validator);

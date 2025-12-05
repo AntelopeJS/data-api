@@ -47,7 +47,7 @@ export interface FieldData {
     /**
      * Value validator callback.
      */
-    validator?: (value: unknown) => boolean;
+    validator?: (value: unknown) => boolean | Promise<boolean>;
     /**
      * Field property descriptor.
      */
@@ -162,7 +162,7 @@ export declare class DataAPIMeta {
      * @param name Field name
      * @param validator Value validator callback
      */
-    setValidator(name: string, validator?: (value: unknown) => boolean): this;
+    setValidator(name: string, validator?: (value: unknown) => boolean | Promise<boolean>): this;
     /**
      * Updates the known field descriptor of this field.
      *
@@ -247,7 +247,7 @@ export declare const Foreign: (table: string | Class<Table>, index?: string | un
  *
  * @param validator Value validator callback
  */
-export declare const Validator: (validator: (val: unknown) => boolean) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
+export declare const Validator: (validator: (val: unknown) => boolean | Promise<boolean>) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
 /**
  * Creates a field filter.
  *

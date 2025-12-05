@@ -175,7 +175,7 @@ export namespace DefaultRoutes {
       if (!params.noMandatory) {
         Validation.MandatoryFields(meta, data, 'new');
       }
-      Validation.ValidateTypes(meta, data);
+      await Validation.ValidateTypes(meta, data);
 
       const dbData = await Query.WriteProperties(this, meta, data);
       Validation.Lock(this, meta, dbData);
@@ -194,7 +194,7 @@ export namespace DefaultRoutes {
       if (!params.noMandatory) {
         Validation.MandatoryFields(meta, data, 'edit');
       }
-      Validation.ValidateTypes(meta, data);
+      await Validation.ValidateTypes(meta, data);
 
       const model = Query.GetModel(this, meta);
 

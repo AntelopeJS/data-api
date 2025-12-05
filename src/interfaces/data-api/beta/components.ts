@@ -331,10 +331,13 @@ export namespace Validation {
     assert(missing.length === 0, `Missing mandatory fields: ${missing.join(', ')}`);
   }
 
-  export function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>) {
-    const invalid = Object.entries(meta.fields)
-      .filter(([name, field]) => field.validator && name in obj && !field.validator(obj[name]))
-      .map(([name]) => name);
+  export async function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>) {
+    const invalid: string[] = [];
+    for (const [name, field] of Object.entries(meta.fields)) {
+      if (field.validator && name in obj && !(await field.validator(obj[name]))) {
+        invalid.push(name);
+      }
+    }
     assert(invalid.length === 0, `Invalid field type(s): ${invalid.join(', ')}`);
   }
 

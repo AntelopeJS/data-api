@@ -464,11 +464,13 @@ export const Foreign = MakeMethodAndPropertyDecorator(
  *
  * @param validator Value validator callback
  */
-export const Validator = MakeMethodAndPropertyDecorator((target, key, desc, validator: (val: unknown) => boolean | Promise<boolean>) => {
-  GetMetadata(target.constructor, DataAPIMeta)
-    .setDescriptor(key as string, desc)
-    .setValidator(key as string, validator);
-});
+export const Validator = MakeMethodAndPropertyDecorator(
+  (target, key, desc, validator: (val: unknown) => boolean | Promise<boolean>) => {
+    GetMetadata(target.constructor, DataAPIMeta)
+      .setDescriptor(key as string, desc)
+      .setValidator(key as string, validator);
+  },
+);
 
 /**
  * Creates a field filter.

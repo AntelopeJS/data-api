@@ -60,7 +60,7 @@ export declare namespace Query {
     function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, onlyList?: boolean): Promise<Record<string, any>>;
     function WriteProperties(obj: any, meta: DataAPIMeta, bodyData: Record<string, any>, existingDBData?: Record<string, any>): Promise<Record<string, any>>;
     function Get(table: Table, id: string | ValueProxy.Proxy<string>, index?: string): import("@ajs/database/beta").SingleSelection<any>;
-    function List<T extends Record<string, any>>(obj: any, meta: DataAPIMeta, request: Stream<T>, reqCtx: RequestContext, sorting?: [string, 'asc' | 'desc' | undefined], filters?: Record<string, FilterValue>): [sorted: Stream<T>, total: Datum<number>];
+    function List<T extends Record<string, any>>(obj: any, meta: DataAPIMeta, request: Table<T>, reqCtx: RequestContext, sorting?: [string, 'asc' | 'desc' | undefined], filters?: Record<string, FilterValue>): [sorted: Stream<T>, total: Datum<number>];
     function Delete(table: Table, id: string | string[]): import("@ajs/database/beta").Query<import("@ajs/database/beta").Result.Write<any>>;
 }
 export declare namespace Validation {

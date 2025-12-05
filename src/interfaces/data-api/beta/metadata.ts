@@ -4,7 +4,7 @@ import { RequestContext } from '@ajs/api/beta';
 import { ValueProxy } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
 import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
-import { GetTablesFromSchema, Table } from '@ajs/database-decorators/beta';
+import { GetTablesFromSchema, Table, DatumStaticMetadata, getMetadata } from '@ajs/database-decorators/beta';
 
 /**
  * Field access mode enum.
@@ -60,6 +60,11 @@ export interface FieldData {
    * Field property descriptor.
    */
   desc?: PropertyDescriptor;
+
+  /**
+   * Whether or not an `eq` filter with this field name can use an indexed lookup.
+   */
+  indexable?: boolean;
 }
 
 type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
@@ -325,9 +330,20 @@ export class DataAPIMeta {
    *
    * @param name Filter name
    * @param func Filter callback
+   * @param index
    */
-  public setFilter(name: string, func: FilterFunction<Record<string, any>, Record<string, any>>) {
+  public setFilter(name: string, func: FilterFunction<Record<string, any>, Record<string, any>>, useIndex?: boolean) {
     this.filters[name] = func;
+    const field = this.field(name);
+    if (useIndex) {
+      const tableMeta = getMetadata(this.tableClass, DatumStaticMetadata);
+      const index = tableMeta.indexes[field.dbName ?? name];
+      if (index && index.length === 1) {
+        field.indexable = true;
+      }
+    } else {
+      field.indexable = false;
+    }
     return this;
   }
 
@@ -461,28 +477,32 @@ export const Validator = MakeMethodAndPropertyDecorator((target, key, desc, vali
  */
 export const Filter: <T extends Record<string, any>>(
   func?: FilterFunction<T, T>,
-) => (target: T, propertyKey: string | symbol) => void = MakePropertyDecorator((target, key, func?: any) => {
-  GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
-    key as string,
-    func ||
-      ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
-        switch (mode) {
-          case 'ne':
-            return proxy.ne(val);
-          case 'gt':
-            return proxy.gt(val);
-          case 'ge':
-            return proxy.ge(val);
-          case 'lt':
-            return proxy.lt(val);
-          case 'le':
-            return proxy.le(val);
-          default:
-            return proxy.eq(val);
-        }
-      }),
-  );
-});
+  useIndex?: boolean,
+) => (target: T, propertyKey: string | symbol) => void = MakePropertyDecorator(
+  (target, key, func?: any, useIndex?: boolean) => {
+    GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
+      key as string,
+      func ||
+        ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
+          switch (mode) {
+            case 'ne':
+              return proxy.ne(val);
+            case 'gt':
+              return proxy.gt(val);
+            case 'ge':
+              return proxy.ge(val);
+            case 'lt':
+              return proxy.lt(val);
+            case 'le':
+              return proxy.le(val);
+            default:
+              return proxy.eq(val);
+          }
+        }),
+      useIndex === undefined ? !func : useIndex,
+    );
+  },
+);
 
 /**
  * Sets which field will contain the reference to the database model instance.

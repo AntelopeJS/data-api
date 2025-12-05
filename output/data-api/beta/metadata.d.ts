@@ -52,6 +52,10 @@ export interface FieldData {
      * Field property descriptor.
      */
     desc?: PropertyDescriptor;
+    /**
+     * Whether or not an `eq` filter with this field name can use an indexed lookup.
+     */
+    indexable?: boolean;
 }
 type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
 export type FilterValue = [value: string, mode: Comparison];
@@ -175,8 +179,9 @@ export declare class DataAPIMeta {
      *
      * @param name Filter name
      * @param func Filter callback
+     * @param index
      */
-    setFilter(name: string, func: FilterFunction<Record<string, any>, Record<string, any>>): this;
+    setFilter(name: string, func: FilterFunction<Record<string, any>, Record<string, any>>, useIndex?: boolean): this;
     /**
      * Sets the key containing the database table instance.
      *
@@ -253,7 +258,7 @@ export declare const Validator: (validator: (val: unknown) => boolean) => import
  *
  * @param func Custom filter function
  */
-export declare const Filter: <T extends Record<string, any>>(func?: FilterFunction<T, T>) => (target: T, propertyKey: string | symbol) => void;
+export declare const Filter: <T extends Record<string, any>>(func?: FilterFunction<T, T>, useIndex?: boolean) => (target: T, propertyKey: string | symbol) => void;
 /**
  * Sets which field will contain the reference to the database model instance.
  */

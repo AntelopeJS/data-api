@@ -2,7 +2,7 @@ import { MakeParameterAndPropertyDecorator } from '@ajs/core/beta/decorators';
 import { HTTPResult, RequestContext, SetParameterProvider } from '@ajs/api/beta';
 import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
-import { DataAPIMeta, FilterValue } from './metadata';
+import { DataAPIMeta, FilterValue, comparisonOperations } from './metadata';
 import { GetDataControllerMeta } from '.';
 import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
@@ -13,8 +13,6 @@ export function assert(condition: any, code: number, message: string): asserts c
   }
   return condition;
 }
-
-const VALID_COMPARISON_MODES: readonly string[] = ['eq', 'ne', 'gt', 'ge', 'lt', 'le'];
 
 export namespace Parameters {
   export function GetOptionOverrides<T extends Record<string, any>>(reqCtx: RequestContext): T {
@@ -30,10 +28,11 @@ export namespace Parameters {
         const match = searchVal.match(/([^:]+):(.*)/);
         if (match) {
           const mode = match[1];
+          const validModes = Object.keys(comparisonOperations).join(', ');
           assert(
-            VALID_COMPARISON_MODES.includes(mode),
+            mode in comparisonOperations,
             400,
-            `Invalid comparison mode '${mode}' for filter '${filter}'. Valid modes: ${VALID_COMPARISON_MODES.join(', ')}`,
+            `Invalid comparison mode '${mode}' for filter '${filter}'. Valid modes: ${validModes}`,
           );
           result[filter] = [match[2], mode as FilterValue[1]];
         } else {
@@ -142,7 +141,9 @@ export namespace Parameters {
 
   export const New = MakeParameterAndPropertyDecorator((target, key, param) =>
     SetParameterProvider(target, key, param, function (this: unknown, context) {
-      return ExtractGeneric<NewParameters>(context, GetDataControllerMeta(this), {});
+      const params = ExtractGeneric<NewParameters>(context, GetDataControllerMeta(this), {});
+
+      return params;
     }),
   );
 

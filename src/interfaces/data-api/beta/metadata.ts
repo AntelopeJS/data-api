@@ -474,7 +474,7 @@ export const Validator = MakeMethodAndPropertyDecorator(
 
 type ComparisonOperation = (proxy: ValueProxy.Proxy<string>, val: string) => ValueProxy.ProxyOrVal<boolean>;
 
-const comparisonOperations: Record<Comparison, ComparisonOperation> = {
+export const comparisonOperations: Record<Comparison, ComparisonOperation> = {
   eq: (proxy, val) => proxy.eq(val),
   ne: (proxy, val) => proxy.ne(val),
   gt: (proxy, val) => proxy.gt(val),

@@ -7,12 +7,14 @@ import { GetDataControllerMeta } from '.';
 import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
 
-export function assert(condition: any, err: string, errCode = 400): asserts condition {
+export function assert(condition: any, code: number, message: string): asserts condition {
   if (!condition) {
-    throw new HTTPResult(errCode, err, 'text/plain');
+    throw new HTTPResult(code, message, 'text/plain');
   }
   return condition;
 }
+
+const VALID_COMPARISON_MODES: readonly string[] = ['eq', 'ne', 'gt', 'ge', 'lt', 'le'];
 
 export namespace Parameters {
   export function GetOptionOverrides<T extends Record<string, any>>(reqCtx: RequestContext): T {
@@ -26,7 +28,17 @@ export namespace Parameters {
       if (reqCtx.url.searchParams.has(filter_key)) {
         const searchVal = reqCtx.url.searchParams.get(filter_key)!;
         const match = searchVal.match(/([^:]+):(.*)/);
-        result[filter] = match ? [match[2], match[1] as FilterValue[1]] : [searchVal, 'eq'];
+        if (match) {
+          const mode = match[1];
+          assert(
+            VALID_COMPARISON_MODES.includes(mode),
+            400,
+            `Invalid comparison mode '${mode}' for filter '${filter}'. Valid modes: ${VALID_COMPARISON_MODES.join(', ')}`,
+          );
+          result[filter] = [match[2], mode as FilterValue[1]];
+        } else {
+          result[filter] = [searchVal, 'eq'];
+        }
       }
     }
     return result;
@@ -99,7 +111,7 @@ export namespace Parameters {
         sortDirection: 'string',
       });
 
-      assert(!params.sortKey || meta.fields[params.sortKey]?.sortable, 'Field is not sortable.');
+      assert(!params.sortKey || meta.fields[params.sortKey]?.sortable, 400, 'Field is not sortable.');
       params.limit = params.limit ? Math.min(params.limit, params.maxPage ?? 100) : params.maxPage;
 
       return params;
@@ -118,7 +130,7 @@ export namespace Parameters {
         id: 'string',
       });
 
-      assert(params.id && typeof params.id === 'string', 'Missing id.');
+      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
 
       return params;
     }),
@@ -130,9 +142,7 @@ export namespace Parameters {
 
   export const New = MakeParameterAndPropertyDecorator((target, key, param) =>
     SetParameterProvider(target, key, param, function (this: unknown, context) {
-      const params = ExtractGeneric<NewParameters>(context, GetDataControllerMeta(this), {});
-
-      return params;
+      return ExtractGeneric<NewParameters>(context, GetDataControllerMeta(this), {});
     }),
   );
 
@@ -148,7 +158,7 @@ export namespace Parameters {
         id: 'string',
       });
 
-      assert(params.id && typeof params.id === 'string', 'Missing id.');
+      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
 
       return params;
     }),
@@ -164,7 +174,7 @@ export namespace Parameters {
         id: 'multi:string',
       });
 
-      assert(params.id && Array.isArray(params.id) && params.id.length > 0, 'Missing id.');
+      assert(params.id && Array.isArray(params.id) && params.id.length > 0, 400, 'Missing id.');
 
       return params;
     }),
@@ -173,7 +183,7 @@ export namespace Parameters {
 
 export namespace Query {
   export function GetModel(obj: any, meta: DataAPIMeta): InstanceType<DataModel> & { constructor: DataModel } {
-    assert(meta.modelKey, 'Missing model key.', 500);
+    assert(meta.modelKey, 500, 'Missing model key.');
     return obj[meta.modelKey];
   }
 
@@ -334,7 +344,7 @@ export namespace Validation {
     const missing = Object.entries(meta.fields)
       .filter(([name, field]) => field.mandatory?.has(type) && !(name in obj))
       .map(([name]) => name);
-    assert(missing.length === 0, `Missing mandatory fields: ${missing.join(', ')}`);
+    assert(missing.length === 0, 400, `Missing mandatory fields: ${missing.join(', ')}`);
   }
 
   export async function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>) {
@@ -344,7 +354,7 @@ export namespace Validation {
         invalid.push(name);
       }
     }
-    assert(invalid.length === 0, `Invalid field type(s): ${invalid.join(', ')}`);
+    assert(invalid.length === 0, 400, `Invalid field type(s): ${invalid.join(', ')}`);
   }
 
   export function Lock(obj: any, meta: DataAPIMeta, data: any) {

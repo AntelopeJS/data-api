@@ -114,7 +114,7 @@ export namespace DefaultRoutes {
       }
 
       const dbResult = model.constructor.fromDatabase(await query);
-      assert(dbResult, 'Not Found', 404);
+      assert(dbResult, 404, 'Not Found');
       Validation.Unlock(this, meta, dbResult);
 
       const results = await Query.ReadProperties(this, meta, dbResult);
@@ -134,7 +134,7 @@ export namespace DefaultRoutes {
       let [query, queryTotal] = Query.List(this, meta, model.table, reqCtx, sort, params?.filters);
 
       const pluck: Set<string> | undefined = meta.pluck[params.pluckMode ?? 'list'];
-      assert(params.noPluck || pluck, `No fields found for pluckMode '${params.pluckMode ?? 'list'}'`);
+      assert(params.noPluck || pluck, 400, `No fields found for pluckMode '${params.pluckMode ?? 'list'}'`);
 
       if (!params.noForeign) {
         query = Query.Foreign(model.database, meta, query, params.noPluck ? undefined : pluck);

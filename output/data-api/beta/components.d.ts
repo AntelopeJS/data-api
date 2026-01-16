@@ -2,7 +2,7 @@ import { RequestContext } from '@ajs/api/beta';
 import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { DataAPIMeta, FilterValue } from './metadata';
-export declare function assert(condition: any, err: string, errCode?: number): asserts condition;
+export declare function assert(condition: any, code: number, message: string): asserts condition;
 export declare namespace Parameters {
     export function GetOptionOverrides<T extends Record<string, any>>(reqCtx: RequestContext): T;
     export function ExtractFilters(reqCtx: RequestContext, meta: DataAPIMeta): Record<string, FilterValue>;

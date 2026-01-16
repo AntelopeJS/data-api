@@ -253,6 +253,8 @@ export declare const Foreign: (table: string | Class<Table>, index?: string | un
  * @param validator Value validator callback
  */
 export declare const Validator: (validator: (val: unknown) => boolean | Promise<boolean>) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
+type ComparisonOperation = (proxy: ValueProxy.Proxy<string>, val: string) => ValueProxy.ProxyOrVal<boolean>;
+export declare const comparisonOperations: Record<Comparison, ComparisonOperation>;
 /**
  * Creates a field filter.
  *

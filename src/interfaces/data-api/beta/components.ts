@@ -2,14 +2,14 @@ import { MakeParameterAndPropertyDecorator } from '@ajs/core/beta/decorators';
 import { HTTPResult, RequestContext, SetParameterProvider } from '@ajs/api/beta';
 import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
-import { DataAPIMeta, FilterValue } from './metadata';
+import { DataAPIMeta, FilterValue, comparisonOperations } from './metadata';
 import { GetDataControllerMeta } from '.';
 import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
 
-export function assert(condition: any, err: string, errCode = 400): asserts condition {
+export function assert(condition: any, message: string, code = 400): asserts condition {
   if (!condition) {
-    throw new HTTPResult(errCode, err, 'text/plain');
+    throw new HTTPResult(code, message, 'text/plain');
   }
   return condition;
 }
@@ -26,7 +26,17 @@ export namespace Parameters {
       if (reqCtx.url.searchParams.has(filter_key)) {
         const searchVal = reqCtx.url.searchParams.get(filter_key)!;
         const match = searchVal.match(/([^:]+):(.*)/);
-        result[filter] = match ? [match[2], match[1] as FilterValue[1]] : [searchVal, 'eq'];
+        if (match) {
+          const mode = match[1];
+          const validModes = Object.keys(comparisonOperations).join(', ');
+          assert(
+            mode in comparisonOperations,
+            `Invalid comparison mode '${mode}' for filter '${filter}'. Valid modes: ${validModes}`,
+          );
+          result[filter] = [match[2], mode as FilterValue[1]];
+        } else {
+          result[filter] = [searchVal, 'eq'];
+        }
       }
     }
     return result;

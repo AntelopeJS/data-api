@@ -472,6 +472,17 @@ export const Validator = MakeMethodAndPropertyDecorator(
   },
 );
 
+type ComparisonOperation = (proxy: ValueProxy.Proxy<string>, val: string) => ValueProxy.ProxyOrVal<boolean>;
+
+const comparisonOperations: Record<Comparison, ComparisonOperation> = {
+  eq: (proxy, val) => proxy.eq(val),
+  ne: (proxy, val) => proxy.ne(val),
+  gt: (proxy, val) => proxy.gt(val),
+  ge: (proxy, val) => proxy.ge(val),
+  lt: (proxy, val) => proxy.lt(val),
+  le: (proxy, val) => proxy.le(val),
+};
+
 /**
  * Creates a field filter.
  *
@@ -486,20 +497,7 @@ export const Filter: <T extends Record<string, any>>(
       key as string,
       func ||
         ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
-          switch (mode) {
-            case 'ne':
-              return proxy.ne(val);
-            case 'gt':
-              return proxy.gt(val);
-            case 'ge':
-              return proxy.ge(val);
-            case 'lt':
-              return proxy.lt(val);
-            case 'le':
-              return proxy.le(val);
-            default:
-              return proxy.eq(val);
-          }
+          return comparisonOperations[mode](proxy, val);
         }),
       useIndex === undefined ? !func : useIndex,
     );

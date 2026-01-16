@@ -7,7 +7,7 @@ import { GetDataControllerMeta } from '.';
 import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
 import { Constructible } from '@ajs/database-decorators/beta/common';
 
-export function assert(condition: any, code: number, message: string): asserts condition {
+export function assert(condition: any, message: string, code = 400): asserts condition {
   if (!condition) {
     throw new HTTPResult(code, message, 'text/plain');
   }
@@ -31,7 +31,6 @@ export namespace Parameters {
           const validModes = Object.keys(comparisonOperations).join(', ');
           assert(
             mode in comparisonOperations,
-            400,
             `Invalid comparison mode '${mode}' for filter '${filter}'. Valid modes: ${validModes}`,
           );
           result[filter] = [match[2], mode as FilterValue[1]];
@@ -110,7 +109,7 @@ export namespace Parameters {
         sortDirection: 'string',
       });
 
-      assert(!params.sortKey || meta.fields[params.sortKey]?.sortable, 400, 'Field is not sortable.');
+      assert(!params.sortKey || meta.fields[params.sortKey]?.sortable, 'Field is not sortable.');
       params.limit = params.limit ? Math.min(params.limit, params.maxPage ?? 100) : params.maxPage;
 
       return params;
@@ -129,7 +128,7 @@ export namespace Parameters {
         id: 'string',
       });
 
-      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
+      assert(params.id && typeof params.id === 'string', 'Missing id.');
 
       return params;
     }),
@@ -159,7 +158,7 @@ export namespace Parameters {
         id: 'string',
       });
 
-      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
+      assert(params.id && typeof params.id === 'string', 'Missing id.');
 
       return params;
     }),
@@ -175,7 +174,7 @@ export namespace Parameters {
         id: 'multi:string',
       });
 
-      assert(params.id && Array.isArray(params.id) && params.id.length > 0, 400, 'Missing id.');
+      assert(params.id && Array.isArray(params.id) && params.id.length > 0, 'Missing id.');
 
       return params;
     }),
@@ -184,7 +183,7 @@ export namespace Parameters {
 
 export namespace Query {
   export function GetModel(obj: any, meta: DataAPIMeta): InstanceType<DataModel> & { constructor: DataModel } {
-    assert(meta.modelKey, 500, 'Missing model key.');
+    assert(meta.modelKey, 'Missing model key.', 500);
     return obj[meta.modelKey];
   }
 
@@ -345,7 +344,7 @@ export namespace Validation {
     const missing = Object.entries(meta.fields)
       .filter(([name, field]) => field.mandatory?.has(type) && !(name in obj))
       .map(([name]) => name);
-    assert(missing.length === 0, 400, `Missing mandatory fields: ${missing.join(', ')}`);
+    assert(missing.length === 0, `Missing mandatory fields: ${missing.join(', ')}`);
   }
 
   export async function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>) {
@@ -355,7 +354,7 @@ export namespace Validation {
         invalid.push(name);
       }
     }
-    assert(invalid.length === 0, 400, `Invalid field type(s): ${invalid.join(', ')}`);
+    assert(invalid.length === 0, `Invalid field type(s): ${invalid.join(', ')}`);
   }
 
   export function Lock(obj: any, meta: DataAPIMeta, data: any) {

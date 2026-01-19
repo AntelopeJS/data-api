@@ -41,7 +41,8 @@
       "api@beta",
       "database@beta",
       "database-decorators@beta",
-      "core@beta"
+      "core@beta",
+      "api-util@beta"
     ],
     "importsOptional": [],
     "test": {

@@ -14,7 +14,7 @@ const routes = {
 };
 
 @RegisterDataController()
-export class UserDataAPI extends DataController(User, routes, Controller('/users')) {
+export class UserDataAPI extends DataController(User, routes, Controller('/users'), 'default') {
   @ModelReference()
   @StaticModel(UserModel, databaseName)
   declare userModel: UserModel;

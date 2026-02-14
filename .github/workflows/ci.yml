@@ -6,6 +6,13 @@ on:
       - main
       - feat/*
       - fix/*
+      - chore/*
+      - docs/*
+      - refactor/*
+      - test/*
+      - ci/*
+      - build/*
+      - perf/*
   pull_request:
     branches:
       - main
@@ -13,18 +20,19 @@ on:
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
-    env:
-      COREPACK_DEFAULT_TO_LATEST: 0
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm i -g --force corepack && corepack enable
-      - run: npm i -g @antelopejs/core
-      - run: pnpm install
-      - run: pnpm prepack
-      - run: pnpm lint
-      - run: pnpm test
-      - name: Publish
-        run: pnpx pkg-pr-new publish --compact --no-template --pnpm
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm add -g @antelopejs/core
+      - run: pnpm run typecheck
+      - run: pnpm run prepack
+      - run: pnpm run lint
+      - run: pnpm run test

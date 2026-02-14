@@ -14,7 +14,7 @@ interface RouteCallbackLike {
   method: string;
 }
 
-interface RouteWithOptionsLike<TOptions extends Record<string, string>> {
+interface RouteWithOptionsLike<TOptions extends object> {
   callback: RouteCallbackLike;
   endpoint?: string;
   options?: Partial<TOptions>;
@@ -25,7 +25,12 @@ interface RouteOptions {
 }
 
 const DEFAULT_ROUTE_KEYS = ['get', 'list', 'new', 'edit', 'delete'];
-const DATA_API_REQUIRED_EXPORTS = ['DataController', 'DefaultRoutes', 'GetDataControllerMeta', 'RegisterDataController'];
+const DATA_API_REQUIRED_EXPORTS = [
+  'DataController',
+  'DefaultRoutes',
+  'GetDataControllerMeta',
+  'RegisterDataController',
+];
 const DATA_API_METADATA_REQUIRED_EXPORTS = [
   'Access',
   'AccessMode',

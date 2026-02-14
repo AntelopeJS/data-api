@@ -474,7 +474,7 @@ export const Validator = MakeMethodAndPropertyDecorator(
 
 type ProxyFilterOperator = (proxy: ValueProxy.Proxy<string>, value: string) => ValueProxy.ProxyOrVal<boolean>;
 type DefaultFilterOperators = Record<Comparison, ProxyFilterOperator>;
-type FilterDecoratorCallback<T extends Record<string, any>> = FilterFunction<T, T>;
+type DefaultFilterFunction = FilterFunction<Record<string, any>, Record<string, any>>;
 
 const DEFAULT_FILTER_OPERATORS: DefaultFilterOperators = {
   eq: (proxy, value) => proxy.eq(value),
@@ -493,21 +493,12 @@ function applyDefaultFilterMode(
   return DEFAULT_FILTER_OPERATORS[mode](proxy, value);
 }
 
-function createDefaultFilter(): FilterFunction<Record<string, any>, Record<string, any>> {
-  return (_context, proxy: ValueProxy.Proxy<string>, _key, value: string, mode) =>
-    applyDefaultFilterMode(proxy, value, mode);
+function createDefaultFilter(): DefaultFilterFunction {
+  return (_context, proxy, _key, value, mode) => applyDefaultFilterMode(proxy as ValueProxy.Proxy<string>, value, mode);
 }
 
-/**
- * Creates a field filter.
- *
- * @param func Custom filter function
- */
-export const Filter: <T extends Record<string, any>>(
-  func?: FilterDecoratorCallback<T>,
-  useIndex?: boolean,
-) => (target: T, propertyKey: string | symbol) => void = MakePropertyDecorator(
-  (target, key, func?: FilterDecoratorCallback<Record<string, any>>, useIndex?: boolean) => {
+const FilterDecoratorFactory = MakePropertyDecorator(
+  (target, key, func?: DefaultFilterFunction, useIndex?: boolean) => {
     GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
       key as string,
       func || createDefaultFilter(),
@@ -515,6 +506,16 @@ export const Filter: <T extends Record<string, any>>(
     );
   },
 );
+
+/**
+ * Creates a field filter.
+ *
+ * @param func Custom filter function
+ */
+export const Filter = FilterDecoratorFactory as <T extends Record<string, any>>(
+  func?: FilterFunction<T, T>,
+  useIndex?: boolean,
+) => (target: T, propertyKey: string | symbol) => void;
 
 /**
  * Sets which field will contain the reference to the database model instance.

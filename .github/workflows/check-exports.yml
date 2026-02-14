@@ -6,6 +6,13 @@ on:
       - main
       - feat/*
       - fix/*
+      - chore/*
+      - docs/*
+      - refactor/*
+      - test/*
+      - ci/*
+      - build/*
+      - perf/*
   pull_request:
     branches:
       - main
@@ -13,24 +20,30 @@ on:
 jobs:
   check-exports:
     runs-on: ubuntu-latest
-    env:
-      COREPACK_DEFAULT_TO_LATEST: 0
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Enable corepack and install AntelopeJS CLI
-        run: |
-          npm i -g --force corepack && corepack enable
-          npm i -g @antelopejs/core
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install AntelopeJS CLI
+        run: pnpm add -g @antelopejs/core
+
+      - name: Run strict typecheck
+        run: pnpm run typecheck
 
       - name: Build project
         run: pnpm run build
@@ -40,7 +53,6 @@ jobs:
 
       - name: Check for uncommitted changes
         run: |
-          # Check if there are any changes in the working directory
           if [[ -n $(git status --porcelain) ]]; then
             echo "❌ ERROR: Found uncommitted changes after running 'ajs module exports generate'"
             echo ""

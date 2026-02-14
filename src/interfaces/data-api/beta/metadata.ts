@@ -472,35 +472,45 @@ export const Validator = MakeMethodAndPropertyDecorator(
   },
 );
 
+type ProxyFilterOperator = (proxy: ValueProxy.Proxy<string>, value: string) => ValueProxy.ProxyOrVal<boolean>;
+type DefaultFilterOperators = Record<Comparison, ProxyFilterOperator>;
+type FilterDecoratorCallback<T extends Record<string, any>> = FilterFunction<T, T>;
+
+const DEFAULT_FILTER_OPERATORS: DefaultFilterOperators = {
+  eq: (proxy, value) => proxy.eq(value),
+  ne: (proxy, value) => proxy.ne(value),
+  gt: (proxy, value) => proxy.gt(value),
+  ge: (proxy, value) => proxy.ge(value),
+  lt: (proxy, value) => proxy.lt(value),
+  le: (proxy, value) => proxy.le(value),
+};
+
+function applyDefaultFilterMode(
+  proxy: ValueProxy.Proxy<string>,
+  value: string,
+  mode: FilterValue[1],
+): ValueProxy.ProxyOrVal<boolean> {
+  return DEFAULT_FILTER_OPERATORS[mode](proxy, value);
+}
+
+function createDefaultFilter(): FilterFunction<Record<string, any>, Record<string, any>> {
+  return (_context, proxy: ValueProxy.Proxy<string>, _key, value: string, mode) =>
+    applyDefaultFilterMode(proxy, value, mode);
+}
+
 /**
  * Creates a field filter.
  *
  * @param func Custom filter function
  */
 export const Filter: <T extends Record<string, any>>(
-  func?: FilterFunction<T, T>,
+  func?: FilterDecoratorCallback<T>,
   useIndex?: boolean,
 ) => (target: T, propertyKey: string | symbol) => void = MakePropertyDecorator(
-  (target, key, func?: any, useIndex?: boolean) => {
+  (target, key, func?: FilterDecoratorCallback<Record<string, any>>, useIndex?: boolean) => {
     GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
       key as string,
-      func ||
-        ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
-          switch (mode) {
-            case 'ne':
-              return proxy.ne(val);
-            case 'gt':
-              return proxy.gt(val);
-            case 'ge':
-              return proxy.ge(val);
-            case 'lt':
-              return proxy.lt(val);
-            case 'le':
-              return proxy.le(val);
-            default:
-              return proxy.eq(val);
-          }
-        }),
+      func || createDefaultFilter(),
       useIndex === undefined ? !func : useIndex,
     );
   },

@@ -472,39 +472,50 @@ export const Validator = MakeMethodAndPropertyDecorator(
   },
 );
 
+type ProxyFilterOperator = (proxy: ValueProxy.Proxy<string>, value: string) => ValueProxy.ProxyOrVal<boolean>;
+type DefaultFilterOperators = Record<Comparison, ProxyFilterOperator>;
+type DefaultFilterFunction = FilterFunction<Record<string, any>, Record<string, any>>;
+
+const DEFAULT_FILTER_OPERATORS: DefaultFilterOperators = {
+  eq: (proxy, value) => proxy.eq(value),
+  ne: (proxy, value) => proxy.ne(value),
+  gt: (proxy, value) => proxy.gt(value),
+  ge: (proxy, value) => proxy.ge(value),
+  lt: (proxy, value) => proxy.lt(value),
+  le: (proxy, value) => proxy.le(value),
+};
+
+function applyDefaultFilterMode(
+  proxy: ValueProxy.Proxy<string>,
+  value: string,
+  mode: FilterValue[1],
+): ValueProxy.ProxyOrVal<boolean> {
+  return DEFAULT_FILTER_OPERATORS[mode](proxy, value);
+}
+
+function createDefaultFilter(): DefaultFilterFunction {
+  return (_context, proxy, _key, value, mode) => applyDefaultFilterMode(proxy as ValueProxy.Proxy<string>, value, mode);
+}
+
+const FilterDecoratorFactory = MakePropertyDecorator(
+  (target, key, func?: DefaultFilterFunction, useIndex?: boolean) => {
+    GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
+      key as string,
+      func || createDefaultFilter(),
+      useIndex === undefined ? !func : useIndex,
+    );
+  },
+);
+
 /**
  * Creates a field filter.
  *
  * @param func Custom filter function
  */
-export const Filter: <T extends Record<string, any>>(
+export const Filter = FilterDecoratorFactory as <T extends Record<string, any>>(
   func?: FilterFunction<T, T>,
   useIndex?: boolean,
-) => (target: T, propertyKey: string | symbol) => void = MakePropertyDecorator(
-  (target, key, func?: any, useIndex?: boolean) => {
-    GetMetadata(key ? target.constructor : target, DataAPIMeta).setFilter(
-      key as string,
-      func ||
-        ((_context, proxy: ValueProxy.Proxy<string>, _key, val: string, mode) => {
-          switch (mode) {
-            case 'ne':
-              return proxy.ne(val);
-            case 'gt':
-              return proxy.gt(val);
-            case 'ge':
-              return proxy.ge(val);
-            case 'lt':
-              return proxy.lt(val);
-            case 'le':
-              return proxy.le(val);
-            default:
-              return proxy.eq(val);
-          }
-        }),
-      useIndex === undefined ? !func : useIndex,
-    );
-  },
-);
+) => (target: T, propertyKey: string | symbol) => void;
 
 /**
  * Sets which field will contain the reference to the database model instance.

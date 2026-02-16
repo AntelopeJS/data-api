@@ -32,6 +32,11 @@ export interface FieldData {
   mode?: AccessMode;
 
   /**
+   * Field access mode overrides per DataAPI action.
+   */
+  modeOverrides?: Record<string, AccessMode>;
+
+  /**
    * DB Fields that should be selected for this field.
    */
   listable?: Record<string, string[]>;
@@ -82,6 +87,16 @@ export type FilterFunction<T extends Record<string, any>, U extends Record<strin
   row: ValueProxy.Proxy<U>,
 ) => ValueProxy.ProxyOrVal<boolean>;
 
+export interface ReadableAccessFields {
+  getters: [string, FieldData][];
+  props: [string, FieldData][];
+}
+
+export interface WritableAccessFields {
+  setters: [string, FieldData][];
+  props: [string, FieldData][];
+}
+
 /**
  * Metadata Class containing the DataAPI information.
  */
@@ -131,18 +146,12 @@ export class DataAPIMeta {
   /**
    * Readable fields.
    */
-  public readonly readable: Record<'getters' | 'props', [string, FieldData][]> = {
-    getters: [],
-    props: [],
-  };
+  public readonly readable: Record<string, ReadableAccessFields> = {};
 
   /**
    * Writeable fields.
    */
-  public readonly writable: Record<'setters' | 'props', [string, FieldData][]> = {
-    setters: [],
-    props: [],
-  };
+  public readonly writable: Record<string, WritableAccessFields> = {};
 
   /**
    * Registered DataAPI endpoints.
@@ -174,8 +183,7 @@ export class DataAPIMeta {
         this.modifierKeys.set(key, parent.modifierKeys.get(key)!);
       }
     }
-    merge(parent.readable, this.readable);
-    merge(parent.writable, this.writable);
+    this.recomputeAccess();
     merge(parent.endpoints, this.endpoints);
     this.tableClass = parent.tableClass;
     this.tableName = parent.tableName;
@@ -204,26 +212,41 @@ export class DataAPIMeta {
   }
 
   private recomputeAccess() {
-    this.readable.getters.splice(0, this.readable.getters.length);
-    this.readable.props.splice(0, this.readable.props.length);
-    this.writable.setters.splice(0, this.writable.setters.length);
-    this.writable.props.splice(0, this.writable.props.length);
-    for (const [key, field] of Object.entries(this.fields)) {
-      if (!field.mode) {
-        continue;
-      }
-      if (field.mode & AccessMode.ReadOnly) {
-        if (field.desc?.get) {
-          this.readable.getters.push([key, field]);
-        } else {
-          this.readable.props.push([key, field]);
+    for (const key of Object.keys(this.readable)) {
+      delete this.readable[key];
+    }
+    for (const key of Object.keys(this.writable)) {
+      delete this.writable[key];
+    }
+
+    const actions = new Set<string>(['_default']);
+    for (const field of Object.values(this.fields)) {
+      if (field.modeOverrides) {
+        for (const action of Object.keys(field.modeOverrides)) {
+          actions.add(action);
         }
       }
-      if (field.mode & AccessMode.WriteOnly) {
-        if (field.desc?.set) {
-          this.writable.setters.push([key, field]);
-        } else {
-          this.writable.props.push([key, field]);
+    }
+
+    for (const action of actions) {
+      this.readable[action] = { getters: [], props: [] };
+      this.writable[action] = { setters: [], props: [] };
+    }
+
+    for (const [key, field] of Object.entries(this.fields)) {
+      for (const action of actions) {
+        const effectiveMode = action === '_default' ? field.mode : (field.modeOverrides?.[action] ?? field.mode);
+        if (!effectiveMode) {
+          continue;
+        }
+
+        if (effectiveMode & AccessMode.ReadOnly) {
+          const target = field.desc?.get ? 'getters' : 'props';
+          this.readable[action][target].push([key, field]);
+        }
+        if (effectiveMode & AccessMode.WriteOnly) {
+          const target = field.desc?.set ? 'setters' : 'props';
+          this.writable[action][target].push([key, field]);
         }
       }
     }
@@ -235,8 +258,10 @@ export class DataAPIMeta {
    * @param name Field name
    * @param mode Access mode
    */
-  public setMode(name: string, mode: AccessMode) {
-    this.field(name).mode = mode;
+  public setMode(name: string, mode: AccessMode, overrides?: Record<string, AccessMode>) {
+    const field = this.field(name);
+    field.mode = mode;
+    field.modeOverrides = overrides;
     this.recomputeAccess();
     return this;
   }
@@ -388,11 +413,13 @@ export class DataAPIMeta {
  *
  * @param mode Access mode
  */
-export const Access = MakeMethodAndPropertyDecorator((target, key, desc, mode: AccessMode) => {
-  GetMetadata(target.constructor, DataAPIMeta)
-    .setDescriptor(key as string, desc)
-    .setMode(key as string, mode);
-});
+export const Access = MakeMethodAndPropertyDecorator(
+  (target, key, desc, mode: AccessMode, overrides?: Record<string, AccessMode>) => {
+    GetMetadata(target.constructor, DataAPIMeta)
+      .setDescriptor(key as string, desc)
+      .setMode(key as string, mode, overrides);
+  },
+);
 
 /**
  * Sets the listable state of a DataAPI field.

@@ -218,10 +218,11 @@ export namespace Query {
     }
   }
 
-  export async function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, onlyList?: boolean) {
+  export async function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, action?: string, onlyList?: boolean) {
+    const readable = meta.readable[action ?? '_default'] ?? meta.readable['_default'];
     const instance: Record<string, any> = { ...obj };
     const res: Record<string, any> = {};
-    for (const [key, field] of meta.readable.props) {
+    for (const [key, field] of readable.props) {
       if (onlyList && !field.listable) {
         continue;
       }
@@ -230,7 +231,7 @@ export namespace Query {
     }
     instance.table = dbData;
     Object.setPrototypeOf(instance, meta.target.prototype);
-    for (const [key, field] of meta.readable.getters) {
+    for (const [key, field] of readable.getters) {
       if (onlyList && !field.listable) {
         continue;
       }
@@ -244,8 +245,10 @@ export namespace Query {
     obj: any,
     meta: DataAPIMeta,
     bodyData: Record<string, any>,
+    action?: string,
     existingDBData?: Record<string, any>,
   ) {
+    const writable = meta.writable[action ?? '_default'] ?? meta.writable['_default'];
     const instance: Record<string, any> = { ...obj };
     const dbData: Record<string, any> = existingDBData || {};
     Object.setPrototypeOf(dbData, meta.tableClass.prototype);
@@ -259,13 +262,13 @@ export namespace Query {
         }
       }
     }
-    for (const [key, field] of meta.writable.props) {
+    for (const [key, field] of writable.props) {
       instance[key] = bodyData[key];
       dbData[field.dbName || key] = bodyData[key];
     }
     instance.table = dbData;
     Object.setPrototypeOf(instance, meta.target.prototype);
-    for (const [key, field] of meta.writable.setters) {
+    for (const [key, field] of writable.setters) {
       field.desc?.set?.apply(instance, [bodyData[key]]);
     }
     return dbData;

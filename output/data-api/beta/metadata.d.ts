@@ -27,6 +27,10 @@ export interface FieldData {
      */
     mode?: AccessMode;
     /**
+     * Field access mode overrides per DataAPI action.
+     */
+    modeOverrides?: Record<string, AccessMode>;
+    /**
      * DB Fields that should be selected for this field.
      */
     listable?: Record<string, string[]>;
@@ -65,6 +69,14 @@ export type FilterValue = [value: string, mode: Comparison];
 export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (context: RequestContext & {
     this: T;
 }, proxy: ValueProxy.Proxy<any>, key: string, value: FilterValue[0], mode: FilterValue[1], row: ValueProxy.Proxy<U>) => ValueProxy.ProxyOrVal<boolean>;
+export interface ReadableAccessFields {
+    getters: [string, FieldData][];
+    props: [string, FieldData][];
+}
+export interface WritableAccessFields {
+    setters: [string, FieldData][];
+    props: [string, FieldData][];
+}
 /**
  * Metadata Class containing the DataAPI information.
  */
@@ -106,11 +118,11 @@ export declare class DataAPIMeta {
     /**
      * Readable fields.
      */
-    readonly readable: Record<'getters' | 'props', [string, FieldData][]>;
+    readonly readable: Record<string, ReadableAccessFields>;
     /**
      * Writeable fields.
      */
-    readonly writable: Record<'setters' | 'props', [string, FieldData][]>;
+    readonly writable: Record<string, WritableAccessFields>;
     /**
      * Registered DataAPI endpoints.
      */
@@ -126,7 +138,7 @@ export declare class DataAPIMeta {
      * @param name Field name
      * @param mode Access mode
      */
-    setMode(name: string, mode: AccessMode): this;
+    setMode(name: string, mode: AccessMode, overrides?: Record<string, AccessMode>): this;
     /**
      * Sets whether a field should be included in list endpoints.
      *
@@ -208,7 +220,7 @@ export declare class DataAPIMeta {
  *
  * @param mode Access mode
  */
-export declare const Access: (mode: AccessMode) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
+export declare const Access: (mode: AccessMode, overrides?: Record<string, AccessMode> | undefined) => import("@ajs/core/beta/decorators").PropertyDecorator & import("@ajs/core/beta/decorators").MethodDecorator;
 /**
  * Sets the listable state of a DataAPI field.
  *

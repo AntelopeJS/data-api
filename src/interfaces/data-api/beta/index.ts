@@ -118,7 +118,7 @@ export namespace DefaultRoutes {
       assert(dbResult, 404, 'Not Found');
       Validation.Unlock(this, meta, dbResult);
 
-      const results = await Query.ReadProperties(this, meta, dbResult);
+      const results = await Query.ReadProperties(this, meta, dbResult, 'get');
 
       Validation.ClearInternal(meta, results);
 
@@ -155,7 +155,7 @@ export namespace DefaultRoutes {
         dbResult.map((entry) => {
           const entryInstance = model.constructor.fromDatabase(entry);
           Validation.Unlock(this, meta, entryInstance);
-          return Query.ReadProperties(this, meta, entryInstance);
+          return Query.ReadProperties(this, meta, entryInstance, 'list');
         }),
       );
 
@@ -178,7 +178,7 @@ export namespace DefaultRoutes {
       }
       await Validation.ValidateTypes(meta, data);
 
-      const dbData = await Query.WriteProperties(this, meta, data);
+      const dbData = await Query.WriteProperties(this, meta, data, 'new');
       Validation.Lock(this, meta, dbData);
 
       const model = Query.GetModel(this, meta);
@@ -202,7 +202,7 @@ export namespace DefaultRoutes {
       const queryPrevious = Query.Get(model.table, params.id, params.index);
       const dbResultPrevious = await queryPrevious;
 
-      const dbData = await Query.WriteProperties(this, meta, data, dbResultPrevious);
+      const dbData = await Query.WriteProperties(this, meta, data, 'edit', dbResultPrevious);
       Validation.Lock(this, meta, dbData);
 
       triggerEvent(dbData, 'update');

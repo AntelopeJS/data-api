@@ -42,7 +42,7 @@ export declare namespace DefaultRoutes {
         method: string;
     };
     const New: {
-        func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[] | undefined>;
+        func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
@@ -52,7 +52,7 @@ export declare namespace DefaultRoutes {
         method: string;
     };
     const Delete: {
-        func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<import("@ajs/database/beta").Result.Write<any>>;
+        func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
@@ -73,7 +73,7 @@ export declare namespace DefaultRoutes {
             method: string;
         };
         readonly new: {
-            func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[] | undefined>;
+            func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };
@@ -83,7 +83,7 @@ export declare namespace DefaultRoutes {
             method: string;
         };
         readonly delete: {
-            func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<import("@ajs/database/beta").Result.Write<any>>;
+            func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };

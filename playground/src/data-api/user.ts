@@ -3,8 +3,6 @@ import { User, UserModel } from '../db/user';
 import { Controller } from '@ajs/api/beta';
 import { StaticModel } from '@ajs/database-decorators/beta';
 import { Access, AccessMode, Listable, Mandatory, ModelReference, Sortable } from '@ajs/data-api/beta/metadata';
-import { databaseName } from '../utils';
-
 const routes = {
   get: DefaultRoutes.Get,
   list: DefaultRoutes.List,
@@ -14,9 +12,9 @@ const routes = {
 };
 
 @RegisterDataController()
-export class UserDataAPI extends DataController(User, routes, Controller('/users'), 'default') {
+export class UserDataAPI extends DataController(User, routes, Controller('/users')) {
   @ModelReference()
-  @StaticModel(UserModel, databaseName)
+  @StaticModel(UserModel, 'default')
   declare userModel: UserModel;
 
   @Listable()

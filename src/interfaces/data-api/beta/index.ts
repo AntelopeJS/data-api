@@ -3,6 +3,7 @@ import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/de
 import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
 import { Datum } from '@ajs/database/beta';
 import { getTablesForSchema } from '@ajs/database-decorators/beta/schema';
+import { getMetadata, DatumStaticMetadata } from '@ajs/database-decorators/beta';
 import { assert } from '@ajs/api-util/beta';
 import { DataAPIMeta } from './metadata';
 import { Parameters, Query, Validation } from './components';
@@ -43,12 +44,13 @@ export function DataController<
   C extends Class,
   P extends DataControllerDef = DataControllerDef,
   Base extends ControllerClass = ControllerClass,
->(tableClass: C, def: P, base: Base, schemaName?: string): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
+>(tableClass: C, def: P, base: Base): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
   const c = class extends base {
     table!: InstanceType<C>;
   };
   const meta = GetMetadata(c, DataAPIMeta);
-  meta.schemaName = schemaName || 'default';
+  const tableMetadata = getMetadata(tableClass, DatumStaticMetadata);
+  meta.schemaName = tableMetadata.schemaName || 'default';
 
   const databaseSchema = getTablesForSchema(meta.schemaName);
   assert_(databaseSchema, 'Non-existent Database Schema');

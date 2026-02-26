@@ -1,6 +1,6 @@
 import { MakeParameterAndPropertyDecorator } from '@ajs/core/beta/decorators';
 import { RequestContext, SetParameterProvider } from '@ajs/api/beta';
-import { Datum, Stream, Table, ValueProxy, ValueProxyOrValue, SchemaInstance } from '@ajs/database/beta';
+import { Datum, Stream, Table, ValueProxy, SchemaInstance } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { assert } from '@ajs/api-util/beta';
 import { DataAPIMeta, FilterValue } from './metadata';
@@ -171,9 +171,24 @@ export namespace Query {
     return obj[meta.modelKey];
   }
 
-  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Stream<any>, pluck?: Set<string>): Stream<any>;
-  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Datum<any>, pluck?: Set<string>): Datum<any>;
-  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Stream<any> | Datum<any>, pluck?: Set<string>): Stream<any> | Datum<any> {
+  export function Foreign(
+    db: SchemaInstance<any>,
+    meta: DataAPIMeta,
+    query: Stream<any>,
+    pluck?: Set<string>,
+  ): Stream<any>;
+  export function Foreign(
+    db: SchemaInstance<any>,
+    meta: DataAPIMeta,
+    query: Datum<any>,
+    pluck?: Set<string>,
+  ): Datum<any>;
+  export function Foreign(
+    db: SchemaInstance<any>,
+    meta: DataAPIMeta,
+    query: Stream<any> | Datum<any>,
+    pluck?: Set<string>,
+  ): Stream<any> | Datum<any> {
     /**/
     if (query instanceof Stream) {
       for (const [name, field] of Object.entries(meta.fields)) {
@@ -183,9 +198,9 @@ export namespace Query {
         const [table, _tableClass, index, _multi, pluckField] = field.foreign;
         let other = db.table(table);
         if (pluckField) {
-          query = (query as Stream<any>).lookup(other.pluck('_internal', ...pluckField) as Table<any>, name, index || '_id');
+          query = query.lookup(other.pluck('_internal', ...pluckField) as Table<any>, name, index || '_id');
         } else {
-          query = (query as Stream<any>).lookup(other, name, index || '_id');
+          query = query.lookup(other, name, index || '_id');
         }
       }
       return query;
@@ -211,7 +226,7 @@ export namespace Query {
         }
         return obj.merge(changedFields);
       };
-      return (query as Datum<any>).do(oldForeign);
+      return query.do(oldForeign);
     }
   }
 
@@ -291,7 +306,7 @@ export namespace Query {
 
     const shouldSort = sorting && meta.fields[sorting[0]]?.sortable;
     if (shouldSort && shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0] as string, sorting[1] ?? 'asc');
+      tmpRequest = tmpRequest.orderBy(sorting[0], sorting[1] ?? 'asc');
     }
     if (filterList.length > 0) {
       // TODO: rework for modifier-affected fields (unlockrequest)
@@ -313,7 +328,7 @@ export namespace Query {
       );
     }
     if (shouldSort && !shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0] as string, sorting[1] ?? 'asc');
+      tmpRequest = tmpRequest.orderBy(sorting[0], sorting[1] ?? 'asc');
     }
     return [tmpRequest, tmpRequest.count()];
   }

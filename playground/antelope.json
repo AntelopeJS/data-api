@@ -20,9 +20,10 @@
     },
     "@antelopejs/api": {
       "source": {
-        "type": "package",
-        "package": "@antelopejs/api",
-        "version": "0.0.1"
+        "type": "git",
+        "remote": "https://github.com/AntelopeJS/api.git",
+        "branch": "main",
+        "installCommand": ["pnpm i", "npx tsc"]
       },
       "config": {
         "servers": [

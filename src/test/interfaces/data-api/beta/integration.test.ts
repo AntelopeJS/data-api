@@ -794,7 +794,6 @@ async function clientPreferencesManagement() {
 }
 
 async function errorManagementAndComplexValidation() {
-
   const invalidCustomer = {
     firstName: 'Test',
     lastName: 'User',

@@ -1,6 +1,6 @@
 import { MakeParameterAndPropertyDecorator } from '@ajs/core/beta/decorators';
 import { RequestContext, SetParameterProvider } from '@ajs/api/beta';
-import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
+import { Datum, Stream, Table, ValueProxy, ValueProxyOrValue, SchemaInstance } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { assert } from '@ajs/api-util/beta';
 import { DataAPIMeta, FilterValue } from './metadata';
@@ -171,25 +171,26 @@ export namespace Query {
     return obj[meta.modelKey];
   }
 
-  export function Foreign(db: Database, meta: DataAPIMeta, query: Stream, pluck?: Set<string>): Stream;
-  export function Foreign(db: Database, meta: DataAPIMeta, query: Datum, pluck?: Set<string>): Datum;
-  export function Foreign(db: Database, meta: DataAPIMeta, query: Stream | Datum, pluck?: Set<string>): Stream | Datum {
+  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Stream<any>, pluck?: Set<string>): Stream<any>;
+  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Datum<any>, pluck?: Set<string>): Datum<any>;
+  export function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Stream<any> | Datum<any>, pluck?: Set<string>): Stream<any> | Datum<any> {
     /**/
-    if (query.lookup) {
+    if (query instanceof Stream) {
       for (const [name, field] of Object.entries(meta.fields)) {
         if (!field.foreign || (pluck && !pluck.has(name))) {
           continue;
         }
         const [table, _tableClass, index, _multi, pluckField] = field.foreign;
-        let other: Stream = db.table(table);
+        let other = db.table(table);
         if (pluckField) {
-          other = other.pluck('_internal', ...pluckField);
+          query = (query as Stream<any>).lookup(other.pluck('_internal', ...pluckField) as Table<any>, name, index || '_id');
+        } else {
+          query = (query as Stream<any>).lookup(other, name, index || '_id');
         }
-        query = query.lookup(other, name, index || '_id');
       }
       return query;
     } else {
-      const oldForeign = (obj: ValueProxy.Proxy<Record<string, any>>) => {
+      const oldForeign = (obj: ValueProxy<Record<string, any>>) => {
         const changedFields: Record<string, any> = {};
         for (const [name, field] of Object.entries(meta.fields)) {
           if (!field.foreign || (pluck && !pluck.has(name))) {
@@ -197,24 +198,20 @@ export namespace Query {
           }
           const [table, _tableClass, index, multi, pluckField] = field.foreign;
           if (multi) {
-            changedFields[name] = (obj(name) as ValueProxy.Proxy<string[]>).default([]).map((val) => {
-              let foreignObject: Datum = Get(db.table(table), val, index);
+            changedFields[name] = (obj.key(name) as ValueProxy<string[]>).default([]).map((val) => {
+              let foreignObject: Datum<any> = Get(db.table(table), val, index);
               if (pluckField) {
                 foreignObject = foreignObject.pluck('_internal', ...pluckField);
               }
               return foreignObject.default(null);
             });
           } else {
-            changedFields[name] = Get(db.table(table), obj(name) as ValueProxy.Proxy<string>, index).default(null);
+            changedFields[name] = Get(db.table(table), obj.key(name) as ValueProxy<string>, index).default(null);
           }
         }
         return obj.merge(changedFields);
       };
-      if ('map' in query) {
-        return query.map(oldForeign as ValueProxy.Proxy<Record<string, any>>);
-      } else {
-        return query.do(oldForeign as ValueProxy.Proxy<Record<string, any>>);
-      }
+      return (query as Datum<any>).do(oldForeign);
     }
   }
 
@@ -274,8 +271,8 @@ export namespace Query {
     return dbData;
   }
 
-  export function Get(table: Table, id: string | ValueProxy.Proxy<string>, index?: string) {
-    return index ? table.getAll(index, id).nth(0) : table.get(id);
+  export function Get(table: Table<any>, id: string | ValueProxy<string>, index?: string) {
+    return index ? table.getAll(id as string, index).nth(0) : table.get(id as string);
   }
 
   export function List<T extends Record<string, any>>(
@@ -290,11 +287,11 @@ export namespace Query {
     const indexFilter = filterList.find(([name]) => filters![name][1] === 'eq' && meta.fields[name]?.indexable)?.[0];
     const index = indexFilter ? meta.fields[indexFilter].dbName || indexFilter : undefined;
 
-    let tmpRequest = index ? request.getAll(index, filters![indexFilter!][0]) : request;
+    let tmpRequest = index ? request.getAll(filters![indexFilter!][0], index) : request;
 
     const shouldSort = sorting && meta.fields[sorting[0]]?.sortable;
     if (shouldSort && shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0] as keyof T, sorting[1] ?? 'asc', false);
+      tmpRequest = tmpRequest.orderBy(sorting[0] as string, sorting[1] ?? 'asc');
     }
     if (filterList.length > 0) {
       // TODO: rework for modifier-affected fields (unlockrequest)
@@ -309,20 +306,20 @@ export namespace Query {
                   name,
                   filters![name][0],
                   filters![name][1],
-                  row as ValueProxy.Proxy<Record<string, any>>,
+                  row as ValueProxy<Record<string, any>>,
                 ),
               ),
         tmpRequest,
       );
     }
     if (shouldSort && !shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0] as keyof T, sorting[1] ?? 'asc', true);
+      tmpRequest = tmpRequest.orderBy(sorting[0] as string, sorting[1] ?? 'asc');
     }
     return [tmpRequest, tmpRequest.count()];
   }
 
-  export function Delete(table: Table, id: string | string[]) {
-    return Array.isArray(id) ? table.getAll(undefined!, ...id).delete() : table.get(id).delete();
+  export function Delete(table: Table<any>, id: string | string[]) {
+    return Array.isArray(id) ? table.getAll(id).delete() : table.get(id).delete();
   }
 }
 
@@ -373,9 +370,9 @@ export namespace Validation {
   export function UnlockRequest<T extends {}, K extends keyof T>(
     obj: any,
     meta: DataAPIMeta,
-    row: ValueProxy.Proxy<T>,
+    row: ValueProxy<T>,
     field: K,
-  ): ValueProxy.Proxy<T[K]> {
+  ): ValueProxy<T[K]> {
     const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({
       modifier,
       args: [obj[field]],

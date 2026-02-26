@@ -35,9 +35,10 @@
     },
     "@antelopejs/mongodb": {
       "source": {
-        "type": "package",
-        "package": "@antelopejs/mongodb",
-        "version": "0.0.1"
+        "type": "git",
+        "remote": "https://github.com/AntelopeJS/mongodb.git",
+        "branch": "feat/aql2",
+        "installCommand": ["pnpm i", "npx tsc"]
       },
       "config": {
         "url": "mongodb://localhost:27017"
@@ -45,9 +46,10 @@
     },
     "@antelopejs/database-decorators": {
       "source": {
-        "type": "package",
-        "package": "@antelopejs/database-decorators",
-        "version": "0.0.1"
+        "type": "git",
+        "remote": "https://github.com/AntelopeJS/database-decorators.git",
+        "branch": "feat/aql2",
+        "installCommand": ["pnpm i", "npx tsc"]
       }
     }
   },

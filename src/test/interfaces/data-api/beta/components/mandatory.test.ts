@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Database, DeleteDatabase } from '@ajs/database/beta';
+import { Schema } from '@ajs/database/beta';
 import {
   Table,
   Index,
   RegisterTable,
-  InitializeDatabase,
+  CreateDatabaseSchemaInstance,
   BasicDataModel,
   StaticModel,
 } from '@ajs/database-decorators/beta';
@@ -17,8 +17,9 @@ import path from 'node:path';
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const orderTableName = `orders-${currentTestName}`;
 const database_name = `test-data-api-${currentTestName}`;
+const schemaName = 'default';
 
-@RegisterTable(orderTableName)
+@RegisterTable(orderTableName, schemaName)
 class Order extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -60,11 +61,14 @@ describe('Field Mandatory', () => {
   it('edit row with missing mandatory fields', async () => await editWithMissingMandatoryFields());
   it('skip mandatory validation when noMandatory is true', async () => await skipMandatoryValidationWhenNoMandatory());
 
-  after(async () => await DeleteDatabase(database_name));
+  after(async () => {});
 });
 
 async function _dropOrderTable() {
-  await Database(database_name).table(orderTableName).delete();
+  const schema = Schema.get(schemaName);
+  if (schema) {
+    await schema.instance(database_name).table(orderTableName).delete();
+  }
 }
 
 async function _createDataController(testName: string, route: any, order?: Partial<Order>) {
@@ -99,12 +103,12 @@ async function _createDataController(testName: string, route: any, order?: Parti
     @Access(AccessMode.ReadWrite)
     declare internalReference: string;
   }
-  const orderModel = new OrderModel(Database(database_name));
-  await InitializeDatabase(database_name, { [orderTableName]: OrderModel });
+  await CreateDatabaseSchemaInstance(schemaName, database_name);
+  const orderModel = new OrderModel(Schema.get(schemaName)!.instance(database_name));
 
   if (order) {
     const insertResult = await orderModel.insert(order);
-    return { id: insertResult.generated_keys![0], orderModel };
+    return { id: insertResult[0], orderModel };
   }
   return { orderModel };
 }

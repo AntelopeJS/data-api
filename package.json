@@ -40,8 +40,14 @@
     "exportsPath": "dist/interfaces",
     "imports": [
       "api@beta",
-      "database@beta",
-      "database-decorators@beta",
+      {
+        "name": "database@beta",
+        "git": "git@github.com:AntelopeJS/interfaces-private.git"
+      },
+      {
+        "name": "database-decorators@beta",
+        "git": "git@github.com:AntelopeJS/interfaces-private.git"
+      },
       "core@beta",
       "api-util@beta"
     ],

@@ -2,7 +2,7 @@ import { GetMetadata } from '@ajs/core/beta';
 import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/decorators';
 import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
 import { Datum } from '@ajs/database/beta';
-import { DEFAULT_SCHEMA, GetTablesFromSchema } from '@ajs/database-decorators/beta/schema';
+import { getTablesForSchema } from '@ajs/database-decorators/beta/schema';
 import { assert } from '@ajs/api-util/beta';
 import { DataAPIMeta } from './metadata';
 import { Parameters, Query, Validation } from './components';
@@ -48,9 +48,9 @@ export function DataController<
     table!: InstanceType<C>;
   };
   const meta = GetMetadata(c, DataAPIMeta);
-  meta.schemaName = schemaName || String(DEFAULT_SCHEMA);
+  meta.schemaName = schemaName || 'default';
 
-  const databaseSchema = GetTablesFromSchema(meta.schemaName);
+  const databaseSchema = getTablesForSchema(meta.schemaName);
   assert_(databaseSchema, 'Non-existent Database Schema');
 
   const tableName = Object.entries(databaseSchema).find(([, table]) => table === tableClass)?.[0];
@@ -108,7 +108,7 @@ export namespace DefaultRoutes {
       const meta = GetDataControllerMeta(this);
 
       const model = Query.GetModel(this, meta);
-      let query = Query.Get(model.table, params.id, params.index) as Datum;
+      let query = Query.Get(model.table, params.id, params.index) as Datum<any>;
 
       if (!params.noForeign) {
         query = Query.Foreign(model.database, meta, query);
@@ -185,7 +185,7 @@ export namespace DefaultRoutes {
       triggerEvent(dbData, 'insert');
       const dbResult = await model.table.insert(dbData);
 
-      return dbResult.generated_keys;
+      return dbResult;
     }
 
     async edit(reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) {

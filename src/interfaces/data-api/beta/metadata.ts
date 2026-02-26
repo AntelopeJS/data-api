@@ -1,10 +1,10 @@
 import { GetMetadata } from '@ajs/core/beta';
 import { Class, MakeMethodAndPropertyDecorator, MakePropertyDecorator } from '@ajs/core/beta/decorators';
 import { RequestContext } from '@ajs/api/beta';
-import { ValueProxy } from '@ajs/database/beta';
+import { ValueProxy, ValueProxyOrValue } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
 import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
-import { GetTablesFromSchema, Table, DatumStaticMetadata, getMetadata } from '@ajs/database-decorators/beta';
+import { getTablesForSchema, Table, DatumStaticMetadata, getMetadata } from '@ajs/database-decorators/beta';
 
 /**
  * Field access mode enum.
@@ -80,12 +80,12 @@ export type FilterValue = [value: string, mode: Comparison];
  */
 export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (
   context: RequestContext & { this: T },
-  proxy: ValueProxy.Proxy<any>,
+  proxy: ValueProxy<any>,
   key: string,
   value: FilterValue[0],
   mode: FilterValue[1],
-  row: ValueProxy.Proxy<U>,
-) => ValueProxy.ProxyOrVal<boolean>;
+  row: ValueProxy<U>,
+) => ValueProxyOrValue<boolean>;
 
 export interface ReadableAccessFields {
   getters: [string, FieldData][];
@@ -317,7 +317,7 @@ export class DataAPIMeta {
    * @param multi Index is a multi index
    */
   public setForeign(name: string, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]) {
-    const databaseSchema = GetTablesFromSchema(this.schemaName);
+    const databaseSchema = getTablesForSchema(this.schemaName)!;
     if (typeof table === 'string') {
       this.field(name).foreign = [table, databaseSchema[table], index, multi || undefined, pluck || undefined];
     } else {
@@ -499,7 +499,7 @@ export const Validator = MakeMethodAndPropertyDecorator(
   },
 );
 
-type ProxyFilterOperator = (proxy: ValueProxy.Proxy<string>, value: string) => ValueProxy.ProxyOrVal<boolean>;
+type ProxyFilterOperator = (proxy: ValueProxy<string>, value: string) => ValueProxyOrValue<boolean>;
 type DefaultFilterOperators = Record<Comparison, ProxyFilterOperator>;
 type DefaultFilterFunction = FilterFunction<Record<string, any>, Record<string, any>>;
 
@@ -513,15 +513,15 @@ const DEFAULT_FILTER_OPERATORS: DefaultFilterOperators = {
 };
 
 function applyDefaultFilterMode(
-  proxy: ValueProxy.Proxy<string>,
+  proxy: ValueProxy<string>,
   value: string,
   mode: FilterValue[1],
-): ValueProxy.ProxyOrVal<boolean> {
+): ValueProxyOrValue<boolean> {
   return DEFAULT_FILTER_OPERATORS[mode](proxy, value);
 }
 
 function createDefaultFilter(): DefaultFilterFunction {
-  return (_context, proxy, _key, value, mode) => applyDefaultFilterMode(proxy as ValueProxy.Proxy<string>, value, mode);
+  return (_context, proxy, _key, value, mode) => applyDefaultFilterMode(proxy as ValueProxy<string>, value, mode);
 }
 
 const FilterDecoratorFactory = MakePropertyDecorator(

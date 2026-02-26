@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Database, DeleteDatabase } from '@ajs/database/beta';
+import { Schema } from '@ajs/database/beta';
 import {
   Table,
   Index,
   RegisterTable,
-  InitializeDatabase,
+  CreateDatabaseSchemaInstance,
   BasicDataModel,
   StaticModel,
 } from '@ajs/database-decorators/beta';
@@ -17,8 +17,9 @@ import path from 'node:path';
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const productTableName = `products-${currentTestName}`;
 const database_name = `test-data-api-${currentTestName}`;
+const schemaName = 'default';
 
-@RegisterTable(productTableName)
+@RegisterTable(productTableName, schemaName)
 class Product extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -66,7 +67,7 @@ describe('Field Validator', () => {
   it('validate incorrect string parameter on edit', async () => await validateIncorrectStringParameterOnEdit());
   it('validate incorrect number parameter on edit', async () => await validateIncorrectNumberParameterOnEdit());
 
-  after(async () => await DeleteDatabase(database_name));
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, route: any, product?: Partial<Product>) {
@@ -106,12 +107,12 @@ async function _createDataController(testName: string, route: any, product?: Par
     @Validator((value) => Array.isArray(value) && value.every((tag) => typeof tag === 'string' && tag.length > 0))
     declare tags: string[];
   }
-  const productModel = new ProductModel(Database(database_name));
-  await InitializeDatabase(database_name, { [productTableName]: ProductModel });
+  await CreateDatabaseSchemaInstance(schemaName, database_name);
+  const productModel = new ProductModel(Schema.get(schemaName)!.instance(database_name));
 
   if (product) {
     const insertResult = await productModel.insert(product);
-    return { id: insertResult.generated_keys![0], productModel };
+    return { id: insertResult[0], productModel };
   }
   return { productModel };
 }

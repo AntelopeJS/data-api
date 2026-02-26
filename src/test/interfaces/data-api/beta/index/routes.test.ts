@@ -49,6 +49,11 @@ const validUserDataset: Record<string, Partial<User>> = {
 };
 
 describe('Routes', () => {
+  beforeEach(async () => {
+    const db = Schema.get(schemaName)!.instance(database_name);
+    await db.table(userTableName).delete();
+  });
+
   it('accessing default routes', async () => requestingDefaultRoutes());
   it('accessing undefined route', async () => await requestingUndefinedRoute());
   it('using route get', async () => await usingRouteGet());

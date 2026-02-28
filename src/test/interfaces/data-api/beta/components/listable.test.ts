@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Database, DeleteDatabase } from '@ajs/database/beta';
+import { Schema } from '@ajs/database/beta';
 import {
   Table,
   Index,
   RegisterTable,
-  InitializeDatabase,
+  CreateDatabaseSchemaInstance,
   BasicDataModel,
   StaticModel,
 } from '@ajs/database-decorators/beta';
@@ -17,8 +17,9 @@ import path from 'node:path';
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const productTableName = `products-${currentTestName}`;
 const database_name = `test-data-api-${currentTestName}`;
+const schemaName = 'default';
 
-@RegisterTable(productTableName)
+@RegisterTable(productTableName, schemaName)
 class Product extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -80,7 +81,7 @@ describe('Field Listable', () => {
   it('sorting by date (addedAt), ascending', async () => await sortByAddedAtAscending());
   it('sorting by date (addedAt), descending', async () => await sortByAddedAtDescending());
 
-  after(async () => await DeleteDatabase(database_name));
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, route: any, product: Partial<Product>[]) {
@@ -127,14 +128,17 @@ async function _createDataController(testName: string, route: any, product: Part
     @Access(AccessMode.ReadOnly)
     declare description: string;
   }
-  const productModel = new ProductModel(Database(database_name));
-  await InitializeDatabase(database_name, { [productTableName]: ProductModel });
+  await CreateDatabaseSchemaInstance(schemaName, database_name);
+  const productModel = new ProductModel(Schema.get(schemaName)!.instance(database_name));
   const insertResults = await productModel.insert(product);
-  return { ids: insertResults.generated_keys!, productModel };
+  return { ids: insertResults, productModel };
 }
 
 async function _dropProductTable() {
-  await Database(database_name).table(productTableName).delete();
+  const schema = Schema.get(schemaName);
+  if (schema) {
+    await schema.instance(database_name).table(productTableName).delete();
+  }
 }
 
 async function _getDatabaseProducts(ids: string[], productModel: ProductModel) {

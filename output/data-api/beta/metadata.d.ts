@@ -1,6 +1,6 @@
 import { Class } from '@ajs/core/beta/decorators';
 import { RequestContext } from '@ajs/api/beta';
-import { ValueProxy } from '@ajs/database/beta';
+import { ValueProxy, ValueProxyOrValue } from '@ajs/database/beta';
 import { DataControllerCallbackWithOptions } from '.';
 import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
 import { Table } from '@ajs/database-decorators/beta';
@@ -68,7 +68,7 @@ export type FilterValue = [value: string, mode: Comparison];
  */
 export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (context: RequestContext & {
     this: T;
-}, proxy: ValueProxy.Proxy<any>, key: string, value: FilterValue[0], mode: FilterValue[1], row: ValueProxy.Proxy<U>) => ValueProxy.ProxyOrVal<boolean>;
+}, proxy: ValueProxy<any>, key: string, value: FilterValue[0], mode: FilterValue[1], row: ValueProxy<U>) => ValueProxyOrValue<boolean>;
 export interface ReadableAccessFields {
     getters: [string, FieldData][];
     props: [string, FieldData][];

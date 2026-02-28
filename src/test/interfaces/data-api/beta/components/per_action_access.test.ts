@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Database, DeleteDatabase } from '@ajs/database/beta';
+import { Schema } from '@ajs/database/beta';
 import {
   Table,
   Index,
   RegisterTable,
-  InitializeDatabase,
+  CreateDatabaseSchemaInstance,
   BasicDataModel,
   StaticModel,
 } from '@ajs/database-decorators/beta';
@@ -17,8 +17,9 @@ import path from 'node:path';
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const userTableName = `users-${currentTestName}`;
 const database_name = `test-data-api-${currentTestName}`;
+const schemaName = 'default';
 
-@RegisterTable(userTableName)
+@RegisterTable(userTableName, schemaName)
 class User extends Table {
   @Index({ primary: true })
   declare id: string;
@@ -43,7 +44,7 @@ describe('Per-Action Access Control', () => {
   it('writable in new but read-only in edit', async () => await writableInNewReadOnlyInEdit());
   it('read-only globally but read-write in new', async () => await readOnlyGloballyReadWriteInNew());
 
-  after(async () => await DeleteDatabase(database_name));
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
@@ -73,11 +74,11 @@ async function _createDataController(testName: string, user: Partial<User>) {
     @Access(AccessMode.ReadOnly, { new: AccessMode.ReadWrite })
     declare age: number;
   }
-  const database = Database(database_name);
+  await CreateDatabaseSchemaInstance(schemaName, database_name);
+  const database = Schema.get(schemaName)!.instance(database_name);
   const userModel = new UserModel(database);
-  await InitializeDatabase(database_name, { [userTableName]: UserModel });
   const insertResult = await userModel.insert(user);
-  return { id: insertResult.generated_keys![0], userModel };
+  return { id: insertResult[0], userModel };
 }
 
 async function writableInNewReadOnlyInEdit() {

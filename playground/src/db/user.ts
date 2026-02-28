@@ -1,4 +1,5 @@
 import { BasicDataModel, Index, Table, RegisterTable, Fixture } from '@ajs/database-decorators/beta';
+import { schemaName } from '../utils';
 
 const tableName = 'users';
 
@@ -27,7 +28,7 @@ const tableName = 'users';
   { _id: 'user19', email: 'user19@example.com', firstName: 'Andrew', lastName: 'Harris' },
   { _id: 'user20', email: 'user20@example.com', firstName: 'Stephanie', lastName: 'Clark' },
 ])
-@RegisterTable(tableName, 'default')
+@RegisterTable(tableName, schemaName)
 export class User extends Table {
   @Index({ primary: true })
   declare _id: string;

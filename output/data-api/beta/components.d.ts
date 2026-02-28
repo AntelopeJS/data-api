@@ -1,5 +1,5 @@
 import { RequestContext } from '@ajs/api/beta';
-import { Database, Datum, Stream, Table, ValueProxy } from '@ajs/database/beta';
+import { Datum, Stream, Table, ValueProxy, SchemaInstance } from '@ajs/database/beta';
 import { DataModel } from '@ajs/database-decorators/beta/model';
 import { DataAPIMeta, FilterValue } from './metadata';
 export declare namespace Parameters {
@@ -54,19 +54,19 @@ export declare namespace Query {
     function GetModel(obj: any, meta: DataAPIMeta): InstanceType<DataModel> & {
         constructor: DataModel;
     };
-    function Foreign(db: Database, meta: DataAPIMeta, query: Stream, pluck?: Set<string>): Stream;
-    function Foreign(db: Database, meta: DataAPIMeta, query: Datum, pluck?: Set<string>): Datum;
+    function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Stream<any>, pluck?: Set<string>): Stream<any>;
+    function Foreign(db: SchemaInstance<any>, meta: DataAPIMeta, query: Datum<any>, pluck?: Set<string>): Datum<any>;
     function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, action?: string, onlyList?: boolean): Promise<Record<string, any>>;
     function WriteProperties(obj: any, meta: DataAPIMeta, bodyData: Record<string, any>, action?: string, existingDBData?: Record<string, any>): Promise<Record<string, any>>;
-    function Get(table: Table, id: string | ValueProxy.Proxy<string>, index?: string): import("@ajs/database/beta").SingleSelection<any>;
+    function Get(table: Table<any>, id: string | ValueProxy<string>, index?: string): Datum<any>;
     function List<T extends Record<string, any>>(obj: any, meta: DataAPIMeta, request: Table<T>, reqCtx: RequestContext, sorting?: [string, 'asc' | 'desc' | undefined], filters?: Record<string, FilterValue>): [sorted: Stream<T>, total: Datum<number>];
-    function Delete(table: Table, id: string | string[]): import("@ajs/database/beta").Query<import("@ajs/database/beta").Result.Write<any>>;
+    function Delete(table: Table<any>, id: string | string[]): import("@ajs/database/beta").Query<number>;
 }
 export declare namespace Validation {
     function MandatoryFields(meta: DataAPIMeta, obj: any, type: string): void;
     function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>): Promise<void>;
     function Lock(obj: any, meta: DataAPIMeta, data: any): void;
     function Unlock(obj: any, meta: DataAPIMeta, dbData: any): void;
-    function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, row: ValueProxy.Proxy<T>, field: K): ValueProxy.Proxy<T[K]>;
+    function UnlockRequest<T extends {}, K extends keyof T>(obj: any, meta: DataAPIMeta, row: ValueProxy<T>, field: K): ValueProxy<T[K]>;
     function ClearInternal(meta: DataAPIMeta, obj: Record<string, any> | Array<Record<string, any>>): void;
 }

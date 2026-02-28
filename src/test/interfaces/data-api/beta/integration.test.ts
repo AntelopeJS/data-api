@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Database, DeleteDatabase } from '@ajs/database/beta';
+import { Schema } from '@ajs/database/beta';
 import {
   Table,
   Index,
   RegisterTable,
-  InitializeDatabase,
+  CreateDatabaseSchemaInstance,
   BasicDataModel,
   StaticModel,
 } from '@ajs/database-decorators/beta';
@@ -28,8 +28,9 @@ const productTableName = `products-${currentTestName}`;
 const orderTableName = `orders-${currentTestName}`;
 const orderItemTableName = `order_items-${currentTestName}`;
 const database_name = `test-data-api-${currentTestName}`;
+const schemaName = 'default';
 
-@RegisterTable(customerTableName)
+@RegisterTable(customerTableName, schemaName)
 class Customer extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -50,7 +51,7 @@ class Customer extends Table {
   declare preferences: string[];
 }
 
-@RegisterTable(productTableName)
+@RegisterTable(productTableName, schemaName)
 class Product extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -72,7 +73,7 @@ class Product extends Table {
   declare updatedAt: Date;
 }
 
-@RegisterTable(orderTableName)
+@RegisterTable(orderTableName, schemaName)
 class Order extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -97,7 +98,7 @@ class Order extends Table {
   declare updatedAt: Date;
 }
 
-@RegisterTable(orderItemTableName)
+@RegisterTable(orderItemTableName, schemaName)
 class OrderItem extends Table {
   @Index({ primary: true })
   declare _id: string;
@@ -229,6 +230,14 @@ const testProducts: Partial<Product>[] = [
 ];
 
 describe('Integration tests', () => {
+  before(async () => {
+    await initializeDatabase();
+  });
+
+  beforeEach(async () => {
+    await cleanTables();
+  });
+
   it('workflow complete of customer management', async () => await workflowCustomerManagement());
   it('workflow complete of product management', async () => await workflowProductManagement());
   it('workflow complete of order management', async () => await workflowOrderManagement());
@@ -237,7 +246,7 @@ describe('Integration tests', () => {
   it('client preferences management and recommendations', async () => await clientPreferencesManagement());
   it('error management and complex validation', async () => await errorManagementAndComplexValidation());
 
-  after(async () => await DeleteDatabase(database_name));
+  after(async () => {});
 });
 
 @RegisterDataController()
@@ -496,24 +505,30 @@ class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Control
 }
 
 async function initializeDatabase() {
-  await InitializeDatabase(database_name, {
-    [customerTableName]: CustomerModel,
-    [productTableName]: ProductModel,
-    [orderTableName]: OrderModel,
-    [orderItemTableName]: OrderItemModel,
-  });
+  await CreateDatabaseSchemaInstance(schemaName, database_name);
+}
+
+async function cleanTables() {
+  const db = Schema.get(schemaName)!.instance(database_name);
+  await Promise.all([
+    db.table(customerTableName).delete(),
+    db.table(productTableName).delete(),
+    db.table(orderTableName).delete(),
+    db.table(orderItemTableName).delete(),
+  ]);
 }
 
 async function createTestData() {
-  const customerModel = new CustomerModel(Database(database_name));
-  const productModel = new ProductModel(Database(database_name));
-  const orderModel = new OrderModel(Database(database_name));
+  const db = Schema.get(schemaName)!.instance(database_name);
+  const customerModel = new CustomerModel(db);
+  const productModel = new ProductModel(db);
+  const orderModel = new OrderModel(db);
   const customerResults = await customerModel.insert(testCustomers);
   const productResults = await productModel.insert(testProducts);
 
   return {
-    customerIds: customerResults.generated_keys!,
-    productIds: productResults.generated_keys!,
+    customerIds: customerResults,
+    productIds: productResults,
     customerModel,
     productModel,
     orderModel,
@@ -521,7 +536,6 @@ async function createTestData() {
 }
 
 async function workflowCustomerManagement() {
-  await initializeDatabase();
   const { customerModel } = await createTestData();
 
   const newCustomer = {
@@ -572,7 +586,6 @@ async function workflowCustomerManagement() {
 }
 
 async function workflowProductManagement() {
-  await initializeDatabase();
   const { productModel } = await createTestData();
 
   const newProduct = {
@@ -617,7 +630,6 @@ async function workflowProductManagement() {
 }
 
 async function workflowOrderManagement() {
-  await initializeDatabase();
   const { customerIds, productIds, orderModel } = await createTestData();
 
   const orderData = {
@@ -690,7 +702,6 @@ async function workflowOrderManagement() {
 }
 
 async function stockManagementAndAutomaticUpdate() {
-  await initializeDatabase();
   const { productIds, productModel } = await createTestData();
 
   const initialProduct = await productModel.get(productIds[0]);
@@ -716,7 +727,6 @@ async function stockManagementAndAutomaticUpdate() {
 }
 
 async function advancedSearchAndFiltering() {
-  await initializeDatabase();
   await createTestData();
 
   const categoryResponse = await listRequest('products', {
@@ -755,7 +765,6 @@ async function advancedSearchAndFiltering() {
 }
 
 async function clientPreferencesManagement() {
-  await initializeDatabase();
   const { customerIds, customerModel } = await createTestData();
 
   const customer = await customerModel.get(customerIds[0]);
@@ -785,8 +794,6 @@ async function clientPreferencesManagement() {
 }
 
 async function errorManagementAndComplexValidation() {
-  await initializeDatabase();
-
   const invalidCustomer = {
     firstName: 'Test',
     lastName: 'User',

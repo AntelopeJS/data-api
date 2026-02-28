@@ -22,7 +22,7 @@ export type ExtractDefCallbacks<T extends {}> = {
 declare abstract class TableHolder<C extends Class> {
     table: InstanceType<C>;
 }
-export declare function DataController<C extends Class, P extends DataControllerDef = DataControllerDef, Base extends ControllerClass = ControllerClass>(tableClass: C, def: P, base: Base, schemaName?: string): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base;
+export declare function DataController<C extends Class, P extends DataControllerDef = DataControllerDef, Base extends ControllerClass = ControllerClass>(tableClass: C, def: P, base: Base): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base;
 export declare const RegisterDataController: () => import("@ajs/core/beta/decorators").ClassDecorator<Class<any, any[]>>;
 export declare function GetDataControllerMeta(thisObj: any): DataAPIMeta;
 export declare namespace DefaultRoutes {
@@ -42,7 +42,7 @@ export declare namespace DefaultRoutes {
         method: string;
     };
     const New: {
-        func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[] | undefined>;
+        func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
@@ -52,7 +52,7 @@ export declare namespace DefaultRoutes {
         method: string;
     };
     const Delete: {
-        func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<import("@ajs/database/beta").Result.Write<any>>;
+        func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
@@ -73,7 +73,7 @@ export declare namespace DefaultRoutes {
             method: string;
         };
         readonly new: {
-            func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[] | undefined>;
+            func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };
@@ -83,7 +83,7 @@ export declare namespace DefaultRoutes {
             method: string;
         };
         readonly delete: {
-            func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<import("@ajs/database/beta").Result.Write<any>>;
+            func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };

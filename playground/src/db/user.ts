@@ -40,4 +40,4 @@ export class User extends Table {
   declare lastName: string;
 }
 
-export class UserModel extends BasicDataModel(User, tableName) { }
+export class UserModel extends BasicDataModel(User, tableName) {}

@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -31,7 +31,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) {}
+class UserModel extends BasicDataModel(User, userTableName) { }
 
 const validUserDataset: Record<string, Partial<User>> = {
   default: {
@@ -62,14 +62,14 @@ describe('Routes', () => {
   it('using route edit', async () => await usingRouteEdit());
   it('using route delete', async () => await usingRouteDelete());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _createDataController(testName: string, user: Partial<User>, routes?: any) {
   @RegisterDataController()
   class _AccessTestAPI extends DataController(User, routes ?? DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(UserModel, database_name)
+    @Model(UserModel, database_name)
     declare userModel: UserModel;
 
     @Listable()

@@ -1,7 +1,7 @@
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs/data-api/beta';
 import { User, UserModel } from '../db/user';
 import { Controller } from '@ajs/api/beta';
-import { StaticModel } from '@ajs/database-decorators/beta';
+import { Model } from '@ajs/database-decorators/beta';
 import { Access, AccessMode, Listable, Mandatory, ModelReference, Sortable } from '@ajs/data-api/beta/metadata';
 const routes = {
   get: DefaultRoutes.Get,
@@ -14,7 +14,7 @@ const routes = {
 @RegisterDataController()
 export class UserDataAPI extends DataController(User, routes, Controller('/users')) {
   @ModelReference()
-  @StaticModel(UserModel, 'default')
+  @Model(UserModel, 'default')
   declare userModel: UserModel;
 
   @Listable()

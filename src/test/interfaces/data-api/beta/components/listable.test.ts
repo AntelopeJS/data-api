@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -34,7 +34,7 @@ class Product extends Table {
   declare internalNotes: string;
   declare metadata: string;
 }
-class ProductModel extends BasicDataModel(Product, productTableName) {}
+class ProductModel extends BasicDataModel(Product, productTableName) { }
 
 const defaultProductDataset: Partial<Product>[] = [
   {
@@ -81,7 +81,7 @@ describe('Field Listable', () => {
   it('sorting by date (addedAt), ascending', async () => await sortByAddedAtAscending());
   it('sorting by date (addedAt), descending', async () => await sortByAddedAtDescending());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _createDataController(testName: string, route: any, product: Partial<Product>[]) {
@@ -89,7 +89,7 @@ async function _createDataController(testName: string, route: any, product: Part
   @RegisterDataController()
   class _ListableTestAPI extends DataController(Product, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(ProductModel, database_name)
+    @Model(ProductModel, database_name)
     declare productModel: ProductModel;
 
     @Listable()

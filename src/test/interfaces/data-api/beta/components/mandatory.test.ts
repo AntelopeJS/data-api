@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -33,7 +33,7 @@ class Order extends Table {
   declare status: string;
   declare notes: string;
 }
-class OrderModel extends BasicDataModel(Order, orderTableName) {}
+class OrderModel extends BasicDataModel(Order, orderTableName) { }
 
 const validOrderDataset: Record<string, Partial<Order>> = {
   default: {
@@ -61,7 +61,7 @@ describe('Field Mandatory', () => {
   it('edit row with missing mandatory fields', async () => await editWithMissingMandatoryFields());
   it('skip mandatory validation when noMandatory is true', async () => await skipMandatoryValidationWhenNoMandatory());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _dropOrderTable() {
@@ -76,7 +76,7 @@ async function _createDataController(testName: string, route: any, order?: Parti
   @RegisterDataController()
   class _MandatoryTestAPI extends DataController(Order, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(OrderModel, database_name)
+    @Model(OrderModel, database_name)
     declare orderModel: OrderModel;
 
     declare _id: string;

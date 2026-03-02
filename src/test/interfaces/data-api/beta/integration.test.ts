@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -116,10 +116,10 @@ class OrderItem extends Table {
   declare discount: number;
 }
 
-class CustomerModel extends BasicDataModel(Customer, customerTableName) {}
-class ProductModel extends BasicDataModel(Product, productTableName) {}
-class OrderModel extends BasicDataModel(Order, orderTableName) {}
-class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) {}
+class CustomerModel extends BasicDataModel(Customer, customerTableName) { }
+class ProductModel extends BasicDataModel(Product, productTableName) { }
+class OrderModel extends BasicDataModel(Order, orderTableName) { }
+class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) { }
 
 const testCustomers: Partial<Customer>[] = [
   {
@@ -246,13 +246,13 @@ describe('Integration tests', () => {
   it('client preferences management and recommendations', async () => await clientPreferencesManagement());
   it('error management and complex validation', async () => await errorManagementAndComplexValidation());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 @RegisterDataController()
 class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controller('/customers')) {
   @ModelReference()
-  @StaticModel(CustomerModel, database_name)
+  @Model(CustomerModel, database_name)
   declare customerModel: CustomerModel;
 
   @Listable()
@@ -325,7 +325,7 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 @RegisterDataController()
 class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller('/products')) {
   @ModelReference()
-  @StaticModel(ProductModel, database_name)
+  @Model(ProductModel, database_name)
   declare productModel: ProductModel;
 
   @Listable()
@@ -403,7 +403,7 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 @RegisterDataController()
 class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/orders')) {
   @ModelReference()
-  @StaticModel(OrderModel, database_name)
+  @Model(OrderModel, database_name)
   declare orderModel: OrderModel;
 
   @Listable()
@@ -472,7 +472,7 @@ class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/or
 @RegisterDataController()
 class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Controller('/order-items')) {
   @ModelReference()
-  @StaticModel(OrderItemModel, database_name)
+  @Model(OrderItemModel, database_name)
   declare orderItemModel: OrderItemModel;
 
   @Listable()

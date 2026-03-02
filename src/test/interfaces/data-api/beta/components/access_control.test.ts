@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -31,7 +31,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) {}
+class UserModel extends BasicDataModel(User, userTableName) { }
 let database: SchemaInstance<any>;
 
 const defaultUserDataset: Partial<User> = {
@@ -49,14 +49,14 @@ describe('Field Access Control', () => {
   it('read in a read only field', async () => await readInReadOnlyField());
   it('write in a write only field', async () => await writeInWriteOnlyField());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
   @RegisterDataController()
   class _AccessTestAPI extends DataController(User, DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(UserModel, database_name)
+    @Model(UserModel, database_name)
     declare userModel: UserModel;
 
     @Access(AccessMode.ReadOnly)

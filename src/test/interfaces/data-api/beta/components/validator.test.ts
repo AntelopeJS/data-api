@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -34,7 +34,7 @@ class Product extends Table {
   declare status: string;
   declare tags: string[];
 }
-class ProductModel extends BasicDataModel(Product, productTableName) {}
+class ProductModel extends BasicDataModel(Product, productTableName) { }
 
 const validProductData: Record<string, Partial<Product>> = {
   default: {
@@ -67,14 +67,14 @@ describe('Field Validator', () => {
   it('validate incorrect string parameter on edit', async () => await validateIncorrectStringParameterOnEdit());
   it('validate incorrect number parameter on edit', async () => await validateIncorrectNumberParameterOnEdit());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _createDataController(testName: string, route: any, product?: Partial<Product>) {
   @RegisterDataController()
   class _ValidatorTestAPI extends DataController(Product, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(ProductModel, database_name)
+    @Model(ProductModel, database_name)
     declare productModel: ProductModel;
 
     declare _id: string;

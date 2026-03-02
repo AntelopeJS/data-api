@@ -6,7 +6,7 @@ import {
   RegisterTable,
   CreateDatabaseSchemaInstance,
   BasicDataModel,
-  StaticModel,
+  Model,
 } from '@ajs/database-decorators/beta';
 import { Controller } from '@ajs/api/beta';
 import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
@@ -31,7 +31,7 @@ class User extends Table {
   declare role: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) {}
+class UserModel extends BasicDataModel(User, userTableName) { }
 
 const defaultUserDataset: Partial<User> = {
   name: 'Jean Test',
@@ -44,14 +44,14 @@ describe('Per-Action Access Control', () => {
   it('writable in new but read-only in edit', async () => await writableInNewReadOnlyInEdit());
   it('read-only globally but read-write in new', async () => await readOnlyGloballyReadWriteInNew());
 
-  after(async () => {});
+  after(async () => { });
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
   @RegisterDataController()
   class _PerActionAccessAPI extends DataController(User, DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
-    @StaticModel(UserModel, database_name)
+    @Model(UserModel, database_name)
     declare userModel: UserModel;
 
     @Access(AccessMode.ReadOnly)

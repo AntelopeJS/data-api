@@ -32,7 +32,6 @@ const schemaName = 'default';
 
 @RegisterTable(customerTableName, schemaName)
 class Customer extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -53,7 +52,6 @@ class Customer extends Table {
 
 @RegisterTable(productTableName, schemaName)
 class Product extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -75,7 +73,6 @@ class Product extends Table {
 
 @RegisterTable(orderTableName, schemaName)
 class Order extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -100,7 +97,6 @@ class Order extends Table {
 
 @RegisterTable(orderItemTableName, schemaName)
 class OrderItem extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -116,10 +112,10 @@ class OrderItem extends Table {
   declare discount: number;
 }
 
-class CustomerModel extends BasicDataModel(Customer, customerTableName) { }
-class ProductModel extends BasicDataModel(Product, productTableName) { }
-class OrderModel extends BasicDataModel(Order, orderTableName) { }
-class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) { }
+class CustomerModel extends BasicDataModel(Customer, customerTableName) {}
+class ProductModel extends BasicDataModel(Product, productTableName) {}
+class OrderModel extends BasicDataModel(Order, orderTableName) {}
+class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) {}
 
 const testCustomers: Partial<Customer>[] = [
   {
@@ -246,7 +242,7 @@ describe('Integration tests', () => {
   it('client preferences management and recommendations', async () => await clientPreferencesManagement());
   it('error management and complex validation', async () => await errorManagementAndComplexValidation());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 @RegisterDataController()
@@ -257,7 +253,6 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 
   @Listable()
   @Access(AccessMode.ReadOnly)
-  @Index({ primary: true })
   declare _id: string;
 
   @Listable()
@@ -330,7 +325,6 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 
   @Listable()
   @Access(AccessMode.ReadOnly)
-  @Index({ primary: true })
   declare _id: string;
 
   @Listable()
@@ -408,7 +402,6 @@ class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/or
 
   @Listable()
   @Access(AccessMode.ReadOnly)
-  @Index({ primary: true })
   declare _id: string;
 
   @Listable()
@@ -477,7 +470,6 @@ class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Control
 
   @Listable()
   @Access(AccessMode.ReadOnly)
-  @Index({ primary: true })
   declare _id: string;
 
   @Listable()

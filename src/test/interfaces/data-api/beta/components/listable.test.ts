@@ -21,7 +21,6 @@ const schemaName = 'default';
 
 @RegisterTable(productTableName, schemaName)
 class Product extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -34,7 +33,7 @@ class Product extends Table {
   declare internalNotes: string;
   declare metadata: string;
 }
-class ProductModel extends BasicDataModel(Product, productTableName) { }
+class ProductModel extends BasicDataModel(Product, productTableName) {}
 
 const defaultProductDataset: Partial<Product>[] = [
   {
@@ -81,7 +80,7 @@ describe('Field Listable', () => {
   it('sorting by date (addedAt), ascending', async () => await sortByAddedAtAscending());
   it('sorting by date (addedAt), descending', async () => await sortByAddedAtDescending());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, route: any, product: Partial<Product>[]) {

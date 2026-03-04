@@ -21,8 +21,7 @@ const schemaName = 'default';
 
 @RegisterTable(userTableName, schemaName)
 class User extends Table {
-  @Index({ primary: true })
-  declare id: string;
+  declare _id: string;
 
   @Index()
   declare email: string;
@@ -31,7 +30,7 @@ class User extends Table {
   declare role: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) { }
+class UserModel extends BasicDataModel(User, userTableName) {}
 
 const defaultUserDataset: Partial<User> = {
   name: 'Jean Test',
@@ -44,7 +43,7 @@ describe('Per-Action Access Control', () => {
   it('writable in new but read-only in edit', async () => await writableInNewReadOnlyInEdit());
   it('read-only globally but read-write in new', async () => await readOnlyGloballyReadWriteInNew());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
@@ -55,7 +54,6 @@ async function _createDataController(testName: string, user: Partial<User>) {
     declare userModel: UserModel;
 
     @Access(AccessMode.ReadOnly)
-    @Index({ primary: true })
     declare _id: string;
 
     @Listable()

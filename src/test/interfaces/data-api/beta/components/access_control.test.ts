@@ -21,8 +21,7 @@ const schemaName = 'default';
 
 @RegisterTable(userTableName, schemaName)
 class User extends Table {
-  @Index({ primary: true })
-  declare id: string;
+  declare _id: string;
 
   @Index()
   declare email: string;
@@ -31,7 +30,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) { }
+class UserModel extends BasicDataModel(User, userTableName) {}
 let database: SchemaInstance<any>;
 
 const defaultUserDataset: Partial<User> = {
@@ -49,7 +48,7 @@ describe('Field Access Control', () => {
   it('read in a read only field', async () => await readInReadOnlyField());
   it('write in a write only field', async () => await writeInWriteOnlyField());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
@@ -60,7 +59,6 @@ async function _createDataController(testName: string, user: Partial<User>) {
     declare userModel: UserModel;
 
     @Access(AccessMode.ReadOnly)
-    @Index({ primary: true })
     declare _id: string;
 
     @Access(AccessMode.WriteOnly)

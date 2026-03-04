@@ -30,7 +30,6 @@ const tableName = 'users';
 ])
 @RegisterTable(tableName, schemaName)
 export class User extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()

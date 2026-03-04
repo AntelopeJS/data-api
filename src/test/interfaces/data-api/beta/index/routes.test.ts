@@ -21,7 +21,6 @@ const schemaName = 'default';
 
 @RegisterTable(userTableName, schemaName)
 class User extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -31,7 +30,7 @@ class User extends Table {
   declare name: string;
   declare age: number;
 }
-class UserModel extends BasicDataModel(User, userTableName) { }
+class UserModel extends BasicDataModel(User, userTableName) {}
 
 const validUserDataset: Record<string, Partial<User>> = {
   default: {
@@ -62,7 +61,7 @@ describe('Routes', () => {
   it('using route edit', async () => await usingRouteEdit());
   it('using route delete', async () => await usingRouteDelete());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>, routes?: any) {
@@ -74,7 +73,6 @@ async function _createDataController(testName: string, user: Partial<User>, rout
 
     @Listable()
     @Access(AccessMode.ReadOnly)
-    @Index({ primary: true })
     declare _id: string;
 
     @Listable()

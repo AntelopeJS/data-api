@@ -21,7 +21,6 @@ const schemaName = 'default';
 
 @RegisterTable(productTableName, schemaName)
 class Product extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -34,7 +33,7 @@ class Product extends Table {
   declare status: string;
   declare tags: string[];
 }
-class ProductModel extends BasicDataModel(Product, productTableName) { }
+class ProductModel extends BasicDataModel(Product, productTableName) {}
 
 const validProductData: Record<string, Partial<Product>> = {
   default: {
@@ -67,7 +66,7 @@ describe('Field Validator', () => {
   it('validate incorrect string parameter on edit', async () => await validateIncorrectStringParameterOnEdit());
   it('validate incorrect number parameter on edit', async () => await validateIncorrectNumberParameterOnEdit());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _createDataController(testName: string, route: any, product?: Partial<Product>) {

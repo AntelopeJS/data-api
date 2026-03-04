@@ -110,7 +110,7 @@ export namespace DefaultRoutes {
       const meta = GetDataControllerMeta(this);
 
       const model = Query.GetModel(this, meta);
-      let query = Query.Get(model.table, params.id, params.index) as Datum<any>;
+      let query = Query.Get(model.table, params.id, params.index);
 
       if (!params.noForeign) {
         query = Query.Foreign(model.database, meta, query);

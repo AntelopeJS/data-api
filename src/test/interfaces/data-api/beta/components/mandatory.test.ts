@@ -21,7 +21,6 @@ const schemaName = 'default';
 
 @RegisterTable(orderTableName, schemaName)
 class Order extends Table {
-  @Index({ primary: true })
   declare _id: string;
 
   @Index()
@@ -33,7 +32,7 @@ class Order extends Table {
   declare status: string;
   declare notes: string;
 }
-class OrderModel extends BasicDataModel(Order, orderTableName) { }
+class OrderModel extends BasicDataModel(Order, orderTableName) {}
 
 const validOrderDataset: Record<string, Partial<Order>> = {
   default: {
@@ -61,7 +60,7 @@ describe('Field Mandatory', () => {
   it('edit row with missing mandatory fields', async () => await editWithMissingMandatoryFields());
   it('skip mandatory validation when noMandatory is true', async () => await skipMandatoryValidationWhenNoMandatory());
 
-  after(async () => { });
+  after(async () => {});
 });
 
 async function _dropOrderTable() {

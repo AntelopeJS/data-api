@@ -16,7 +16,6 @@ import path from 'node:path';
 
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const userTableName = `users-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(userTableName, schemaName)
@@ -49,8 +48,12 @@ const validUserDataset: Record<string, Partial<User>> = {
 
 describe('Routes', () => {
   beforeEach(async () => {
-    const db = Schema.get(schemaName)!.instance(database_name);
-    await db.table(userTableName).delete();
+    try {
+      const db = Schema.get(schemaName)!.instance();
+      await db.table(userTableName).delete();
+    } catch {
+      // Instance may not exist yet on first run
+    }
   });
 
   it('accessing default routes', async () => requestingDefaultRoutes());
@@ -68,7 +71,7 @@ async function _createDataController(testName: string, user: Partial<User>, rout
   @RegisterDataController()
   class _AccessTestAPI extends DataController(User, routes ?? DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
-    @Model(UserModel, database_name)
+    @Model(UserModel)
     declare userModel: UserModel;
 
     @Listable()
@@ -91,8 +94,8 @@ async function _createDataController(testName: string, user: Partial<User>, rout
     @Access(AccessMode.ReadWrite)
     declare email: string;
   }
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
-  const userModel = new UserModel(Schema.get(schemaName)!.instance(database_name));
+  await CreateDatabaseSchemaInstance(schemaName);
+  const userModel = new UserModel(Schema.get(schemaName)!.instance());
   const insertResult = await userModel.insert(user);
   return { id: insertResult[0], userModel };
 }

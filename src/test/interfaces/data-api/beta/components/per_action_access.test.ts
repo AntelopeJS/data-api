@@ -16,7 +16,6 @@ import path from 'node:path';
 
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const userTableName = `users-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(userTableName, schemaName)
@@ -50,7 +49,7 @@ async function _createDataController(testName: string, user: Partial<User>) {
   @RegisterDataController()
   class _PerActionAccessAPI extends DataController(User, DefaultRoutes.All, Controller(`/${testName}`)) {
     @ModelReference()
-    @Model(UserModel, database_name)
+    @Model(UserModel)
     declare userModel: UserModel;
 
     @Access(AccessMode.ReadOnly)
@@ -72,8 +71,8 @@ async function _createDataController(testName: string, user: Partial<User>) {
     @Access(AccessMode.ReadOnly, { new: AccessMode.ReadWrite })
     declare age: number;
   }
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
-  const database = Schema.get(schemaName)!.instance(database_name);
+  await CreateDatabaseSchemaInstance(schemaName);
+  const database = Schema.get(schemaName)!.instance();
   const userModel = new UserModel(database);
   const insertResult = await userModel.insert(user);
   return { id: insertResult[0], userModel };

@@ -16,7 +16,6 @@ import path from 'node:path';
 
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const orderTableName = `orders-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(orderTableName, schemaName)
@@ -66,16 +65,15 @@ describe('Field Mandatory', () => {
 async function _dropOrderTable() {
   const schema = Schema.get(schemaName);
   if (schema) {
-    await schema.instance(database_name).table(orderTableName).delete();
+    await schema.instance().table(orderTableName).delete();
   }
 }
 
 async function _createDataController(testName: string, route: any, order?: Partial<Order>) {
-  await _dropOrderTable();
   @RegisterDataController()
   class _MandatoryTestAPI extends DataController(Order, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @Model(OrderModel, database_name)
+    @Model(OrderModel)
     declare orderModel: OrderModel;
 
     declare _id: string;
@@ -102,8 +100,9 @@ async function _createDataController(testName: string, route: any, order?: Parti
     @Access(AccessMode.ReadWrite)
     declare internalReference: string;
   }
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
-  const orderModel = new OrderModel(Schema.get(schemaName)!.instance(database_name));
+  await CreateDatabaseSchemaInstance(schemaName);
+  await _dropOrderTable();
+  const orderModel = new OrderModel(Schema.get(schemaName)!.instance());
 
   if (order) {
     const insertResult = await orderModel.insert(order);

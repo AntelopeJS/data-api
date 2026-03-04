@@ -16,7 +16,6 @@ import path from 'node:path';
 
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const productTableName = `products-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(productTableName, schemaName)
@@ -73,7 +72,7 @@ async function _createDataController(testName: string, route: any, product?: Par
   @RegisterDataController()
   class _ValidatorTestAPI extends DataController(Product, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @Model(ProductModel, database_name)
+    @Model(ProductModel)
     declare productModel: ProductModel;
 
     declare _id: string;
@@ -106,8 +105,8 @@ async function _createDataController(testName: string, route: any, product?: Par
     @Validator((value) => Array.isArray(value) && value.every((tag) => typeof tag === 'string' && tag.length > 0))
     declare tags: string[];
   }
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
-  const productModel = new ProductModel(Schema.get(schemaName)!.instance(database_name));
+  await CreateDatabaseSchemaInstance(schemaName);
+  const productModel = new ProductModel(Schema.get(schemaName)!.instance());
 
   if (product) {
     const insertResult = await productModel.insert(product);

@@ -27,7 +27,6 @@ const customerTableName = `customers-${currentTestName}`;
 const productTableName = `products-${currentTestName}`;
 const orderTableName = `orders-${currentTestName}`;
 const orderItemTableName = `order_items-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(customerTableName, schemaName)
@@ -248,7 +247,7 @@ describe('Integration tests', () => {
 @RegisterDataController()
 class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controller('/customers')) {
   @ModelReference()
-  @Model(CustomerModel, database_name)
+  @Model(CustomerModel)
   declare customerModel: CustomerModel;
 
   @Listable()
@@ -320,7 +319,7 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 @RegisterDataController()
 class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller('/products')) {
   @ModelReference()
-  @Model(ProductModel, database_name)
+  @Model(ProductModel)
   declare productModel: ProductModel;
 
   @Listable()
@@ -397,7 +396,7 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 @RegisterDataController()
 class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/orders')) {
   @ModelReference()
-  @Model(OrderModel, database_name)
+  @Model(OrderModel)
   declare orderModel: OrderModel;
 
   @Listable()
@@ -465,7 +464,7 @@ class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/or
 @RegisterDataController()
 class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Controller('/order-items')) {
   @ModelReference()
-  @Model(OrderItemModel, database_name)
+  @Model(OrderItemModel)
   declare orderItemModel: OrderItemModel;
 
   @Listable()
@@ -497,11 +496,11 @@ class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Control
 }
 
 async function initializeDatabase() {
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
+  await CreateDatabaseSchemaInstance(schemaName);
 }
 
 async function cleanTables() {
-  const db = Schema.get(schemaName)!.instance(database_name);
+  const db = Schema.get(schemaName)!.instance();
   await Promise.all([
     db.table(customerTableName).delete(),
     db.table(productTableName).delete(),
@@ -511,7 +510,7 @@ async function cleanTables() {
 }
 
 async function createTestData() {
-  const db = Schema.get(schemaName)!.instance(database_name);
+  const db = Schema.get(schemaName)!.instance();
   const customerModel = new CustomerModel(db);
   const productModel = new ProductModel(db);
   const orderModel = new OrderModel(db);

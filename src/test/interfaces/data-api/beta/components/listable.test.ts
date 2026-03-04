@@ -16,7 +16,6 @@ import path from 'node:path';
 
 const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
 const productTableName = `products-${currentTestName}`;
-const database_name = `test-data-api-${currentTestName}`;
 const schemaName = 'default';
 
 @RegisterTable(productTableName, schemaName)
@@ -84,11 +83,10 @@ describe('Field Listable', () => {
 });
 
 async function _createDataController(testName: string, route: any, product: Partial<Product>[]) {
-  await _dropProductTable();
   @RegisterDataController()
   class _ListableTestAPI extends DataController(Product, route, Controller(`/${testName}`)) {
     @ModelReference()
-    @Model(ProductModel, database_name)
+    @Model(ProductModel)
     declare productModel: ProductModel;
 
     @Listable()
@@ -127,8 +125,9 @@ async function _createDataController(testName: string, route: any, product: Part
     @Access(AccessMode.ReadOnly)
     declare description: string;
   }
-  await CreateDatabaseSchemaInstance(schemaName, database_name);
-  const productModel = new ProductModel(Schema.get(schemaName)!.instance(database_name));
+  await CreateDatabaseSchemaInstance(schemaName);
+  await _dropProductTable();
+  const productModel = new ProductModel(Schema.get(schemaName)!.instance());
   const insertResults = await productModel.insert(product);
   return { ids: insertResults, productModel };
 }
@@ -136,7 +135,7 @@ async function _createDataController(testName: string, route: any, product: Part
 async function _dropProductTable() {
   const schema = Schema.get(schemaName);
   if (schema) {
-    await schema.instance(database_name).table(productTableName).delete();
+    await schema.instance().table(productTableName).delete();
   }
 }
 

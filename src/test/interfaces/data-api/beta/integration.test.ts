@@ -1,33 +1,46 @@
-import { expect } from 'chai';
-import { Schema } from '@ajs/database/beta';
+import path from "node:path";
+import { Controller } from "@ajs/api/beta";
 import {
-  Table,
-  Index,
-  RegisterTable,
-  CreateDatabaseSchemaInstance,
   BasicDataModel,
+  CreateDatabaseSchemaInstance,
+  Index,
   Model,
-} from '@ajs/database-decorators/beta';
-import { Controller } from '@ajs/api/beta';
-import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
+  RegisterTable,
+  Table,
+} from "@ajs/database-decorators/beta";
+import {
+  DataController,
+  DefaultRoutes,
+  RegisterDataController,
+} from "@ajs.local/data-api/beta";
 import {
   Access,
   AccessMode,
   Listable,
+  Mandatory,
   ModelReference,
   Sortable,
-  Mandatory,
   Validator,
-} from '@ajs.local/data-api/beta/metadata';
-import { editRequest, getRequest, listRequest, newRequest, request, validateObject } from './utils';
-import path from 'node:path';
+} from "@ajs.local/data-api/beta/metadata";
+import { expect } from "chai";
+import {
+  editRequest,
+  getRequest,
+  getSchemaInstance,
+  listRequest,
+  newRequest,
+  request,
+  validateObject,
+} from "./utils";
 
-const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const currentTestName = path
+  .basename(__filename)
+  .replace(/\.test\.(ts|js)$/, "");
 const customerTableName = `customers-${currentTestName}`;
 const productTableName = `products-${currentTestName}`;
 const orderTableName = `orders-${currentTestName}`;
 const orderItemTableName = `order_items-${currentTestName}`;
-const schemaName = 'default';
+const schemaName = "default";
 
 @RegisterTable(customerTableName, schemaName)
 class Customer extends Table {
@@ -118,113 +131,113 @@ class OrderItemModel extends BasicDataModel(OrderItem, orderItemTableName) {}
 
 const testCustomers: Partial<Customer>[] = [
   {
-    firstName: 'Bob',
-    lastName: 'Bobberson',
-    email: 'bob.bobberson@email.com',
-    phone: '+1234567890',
-    address: '123 Poutine Square',
-    city: 'Quebec City',
-    postalCode: 'G1K 1K1',
-    country: 'Canada',
-    registrationDate: new Date('2023-01-15'),
+    firstName: "Bob",
+    lastName: "Bobberson",
+    email: "bob.bobberson@email.com",
+    phone: "+1234567890",
+    address: "123 Poutine Square",
+    city: "Quebec City",
+    postalCode: "G1K 1K1",
+    country: "Canada",
+    registrationDate: new Date("2023-01-15"),
     isActive: true,
     loyaltyPoints: 150,
-    preferences: ['electronics', 'books'],
+    preferences: ["electronics", "books"],
   },
   {
-    firstName: 'Alice',
-    lastName: 'Alison',
-    email: 'alice.alison@email.com',
-    phone: '+33123456789',
-    address: '456 Baguette Street',
-    city: 'Lyon',
-    postalCode: '69001',
-    country: 'France',
-    registrationDate: new Date('2023-03-20'),
+    firstName: "Alice",
+    lastName: "Alison",
+    email: "alice.alison@email.com",
+    phone: "+33123456789",
+    address: "456 Baguette Street",
+    city: "Lyon",
+    postalCode: "69001",
+    country: "France",
+    registrationDate: new Date("2023-03-20"),
     isActive: true,
     loyaltyPoints: 75,
-    preferences: ['fashion', 'home'],
+    preferences: ["fashion", "home"],
   },
   {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@email.com',
-    phone: '+32123456789',
-    address: '789 Fries Avenue',
-    city: 'Brussels',
-    postalCode: '1000',
-    country: 'Belgium',
-    registrationDate: new Date('2023-06-10'),
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@email.com",
+    phone: "+32123456789",
+    address: "789 Fries Avenue",
+    city: "Brussels",
+    postalCode: "1000",
+    country: "Belgium",
+    registrationDate: new Date("2023-06-10"),
     isActive: false,
     loyaltyPoints: 0,
-    preferences: ['sports'],
+    preferences: ["sports"],
   },
 ];
 
 const testProducts: Partial<Product>[] = [
   {
-    sku: 'LAPTOP-001',
-    name: 'Gaming Laptop',
-    description: 'High performance gaming laptop',
+    sku: "LAPTOP-001",
+    name: "Gaming Laptop",
+    description: "High performance gaming laptop",
     price: 1299.99,
     costPrice: 899.99,
     stockQuantity: 15,
-    category: 'electronics',
-    brand: 'TechCorp',
-    tags: ['gaming', 'laptop', 'high-performance'],
-    images: ['laptop1.jpg', 'laptop2.jpg'],
+    category: "electronics",
+    brand: "TechCorp",
+    tags: ["gaming", "laptop", "high-performance"],
+    images: ["laptop1.jpg", "laptop2.jpg"],
     isActive: true,
-    createdAt: new Date('2023-01-01'),
-    updatedAt: new Date('2023-12-01'),
+    createdAt: new Date("2023-01-01"),
+    updatedAt: new Date("2023-12-01"),
   },
   {
-    sku: 'PHONE-002',
-    name: 'Premium Smartphone',
-    description: 'Professional camera smartphone',
+    sku: "PHONE-002",
+    name: "Premium Smartphone",
+    description: "Professional camera smartphone",
     price: 899.99,
     costPrice: 599.99,
     stockQuantity: 25,
-    category: 'electronics',
-    brand: 'MobileTech',
-    tags: ['smartphone', 'camera', 'premium'],
-    images: ['phone1.jpg', 'phone2.jpg'],
+    category: "electronics",
+    brand: "MobileTech",
+    tags: ["smartphone", "camera", "premium"],
+    images: ["phone1.jpg", "phone2.jpg"],
     isActive: true,
-    createdAt: new Date('2023-02-15'),
-    updatedAt: new Date('2023-11-15'),
+    createdAt: new Date("2023-02-15"),
+    updatedAt: new Date("2023-11-15"),
   },
   {
-    sku: 'BOOK-003',
-    name: 'The Soldering Bible',
-    description: 'Complete guide to soldering components',
+    sku: "BOOK-003",
+    name: "The Soldering Bible",
+    description: "Complete guide to soldering components",
     price: 49.99,
     costPrice: 25.99,
     stockQuantity: 50,
-    category: 'books',
-    brand: 'TechBooks',
-    tags: ['soldering', 'electronics', 'education'],
-    images: ['book1.jpg'],
+    category: "books",
+    brand: "TechBooks",
+    tags: ["soldering", "electronics", "education"],
+    images: ["book1.jpg"],
     isActive: true,
-    createdAt: new Date('2023-03-01'),
-    updatedAt: new Date('2023-10-01'),
+    createdAt: new Date("2023-03-01"),
+    updatedAt: new Date("2023-10-01"),
   },
   {
-    sku: 'SHIRT-004',
-    name: 'Organic Cotton T-shirt',
-    description: 'Comfortable organic cotton t-shirt',
+    sku: "SHIRT-004",
+    name: "Organic Cotton T-shirt",
+    description: "Comfortable organic cotton t-shirt",
     price: 29.99,
     costPrice: 15.99,
     stockQuantity: 100,
-    category: 'fashion',
-    brand: 'EcoFashion',
-    tags: ['cotton', 'organic', 'comfortable'],
-    images: ['shirt1.jpg', 'shirt2.jpg'],
+    category: "fashion",
+    brand: "EcoFashion",
+    tags: ["cotton", "organic", "comfortable"],
+    images: ["shirt1.jpg", "shirt2.jpg"],
     isActive: true,
-    createdAt: new Date('2023-04-10'),
-    updatedAt: new Date('2023-09-10'),
+    createdAt: new Date("2023-04-10"),
+    updatedAt: new Date("2023-09-10"),
   },
 ];
 
-describe('Integration tests', () => {
+describe("Integration tests", () => {
   before(async () => {
     await initializeDatabase();
   });
@@ -233,19 +246,30 @@ describe('Integration tests', () => {
     await cleanTables();
   });
 
-  it('workflow complete of customer management', async () => await workflowCustomerManagement());
-  it('workflow complete of product management', async () => await workflowProductManagement());
-  it('workflow complete of order management', async () => await workflowOrderManagement());
-  it('stock management and automatic update', async () => await stockManagementAndAutomaticUpdate());
-  it('advanced search and filtering', async () => await advancedSearchAndFiltering());
-  it('client preferences management and recommendations', async () => await clientPreferencesManagement());
-  it('error management and complex validation', async () => await errorManagementAndComplexValidation());
+  it("workflow complete of customer management", async () =>
+    await workflowCustomerManagement());
+  it("workflow complete of product management", async () =>
+    await workflowProductManagement());
+  it("workflow complete of order management", async () =>
+    await workflowOrderManagement());
+  it("stock management and automatic update", async () =>
+    await stockManagementAndAutomaticUpdate());
+  it("advanced search and filtering", async () =>
+    await advancedSearchAndFiltering());
+  it("client preferences management and recommendations", async () =>
+    await clientPreferencesManagement());
+  it("error management and complex validation", async () =>
+    await errorManagementAndComplexValidation());
 
   after(async () => {});
 });
 
 @RegisterDataController()
-class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controller('/customers')) {
+class _CustomerAPI extends DataController(
+  Customer,
+  DefaultRoutes.All,
+  Controller("/customers"),
+) {
   @ModelReference()
   @Model(CustomerModel)
   declare customerModel: CustomerModel;
@@ -256,21 +280,21 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'string' && value.length >= 2)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "string" && value.length >= 2)
   declare firstName: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'string' && value.length >= 2)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "string" && value.length >= 2)
   declare lastName: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   @Validator((value) => {
-    if (typeof value !== 'string') return false;
+    if (typeof value !== "string") return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
   })
@@ -278,7 +302,7 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Validator((value) => typeof value === 'string' && value.length >= 10)
+  @Validator((value) => typeof value === "string" && value.length >= 10)
   declare phone: string;
 
   @Listable()
@@ -317,7 +341,11 @@ class _CustomerAPI extends DataController(Customer, DefaultRoutes.All, Controlle
 }
 
 @RegisterDataController()
-class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller('/products')) {
+class _ProductAPI extends DataController(
+  Product,
+  DefaultRoutes.All,
+  Controller("/products"),
+) {
   @ModelReference()
   @Model(ProductModel)
   declare productModel: ProductModel;
@@ -328,14 +356,14 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'string' && value.length >= 3)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "string" && value.length >= 3)
   declare sku: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'string' && value.length >= 3)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "string" && value.length >= 3)
   declare name: string;
 
   @Listable()
@@ -344,26 +372,26 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'number' && value >= 0)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "number" && value >= 0)
   @Sortable({ noIndex: true })
   declare price: number;
 
   @Access(AccessMode.WriteOnly)
-  @Validator((value) => typeof value === 'number' && value >= 0)
+  @Validator((value) => typeof value === "number" && value >= 0)
   @Sortable({ noIndex: true })
   declare costPrice: number;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'number' && value >= 0)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "number" && value >= 0)
   @Sortable({ noIndex: true })
   declare stockQuantity: number;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   declare category: string;
 
   @Listable()
@@ -394,7 +422,11 @@ class _ProductAPI extends DataController(Product, DefaultRoutes.All, Controller(
 }
 
 @RegisterDataController()
-class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/orders')) {
+class _OrderAPI extends DataController(
+  Order,
+  DefaultRoutes.All,
+  Controller("/orders"),
+) {
   @ModelReference()
   @Model(OrderModel)
   declare orderModel: OrderModel;
@@ -405,18 +437,22 @@ class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/or
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   declare orderNumber: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   declare customerId: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(value as string))
+  @Mandatory("new", "edit")
+  @Validator((value) =>
+    ["pending", "processing", "shipped", "delivered", "cancelled"].includes(
+      value as string,
+    ),
+  )
   declare status: string;
 
   @Listable()
@@ -462,7 +498,11 @@ class _OrderAPI extends DataController(Order, DefaultRoutes.All, Controller('/or
 }
 
 @RegisterDataController()
-class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Controller('/order-items')) {
+class _OrderItemAPI extends DataController(
+  OrderItem,
+  DefaultRoutes.All,
+  Controller("/order-items"),
+) {
   @ModelReference()
   @Model(OrderItemModel)
   declare orderItemModel: OrderItemModel;
@@ -473,18 +513,18 @@ class _OrderItemAPI extends DataController(OrderItem, DefaultRoutes.All, Control
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   declare orderId: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
+  @Mandatory("new", "edit")
   declare productId: string;
 
   @Listable()
   @Access(AccessMode.ReadWrite)
-  @Mandatory('new', 'edit')
-  @Validator((value) => typeof value === 'number' && value > 0)
+  @Mandatory("new", "edit")
+  @Validator((value) => typeof value === "number" && value > 0)
   declare quantity: number;
 
   @Listable()
@@ -500,7 +540,7 @@ async function initializeDatabase() {
 }
 
 async function cleanTables() {
-  const db = Schema.get(schemaName)!.instance();
+  const db = getSchemaInstance(schemaName);
   await Promise.all([
     db.table(customerTableName).delete(),
     db.table(productTableName).delete(),
@@ -510,7 +550,7 @@ async function cleanTables() {
 }
 
 async function createTestData() {
-  const db = Schema.get(schemaName)!.instance();
+  const db = getSchemaInstance(schemaName);
   const customerModel = new CustomerModel(db);
   const productModel = new ProductModel(db);
   const orderModel = new OrderModel(db);
@@ -530,46 +570,53 @@ async function workflowCustomerManagement() {
   const { customerModel } = await createTestData();
 
   const newCustomer = {
-    firstName: 'Sophie',
-    lastName: 'Marrone',
-    email: 'sophie.marrone@email.com',
-    phone: '+393334445556',
-    address: 'Via Pasta 10',
-    city: 'Naples',
-    postalCode: '80100',
-    country: 'Italy',
+    firstName: "Sophie",
+    lastName: "Marrone",
+    email: "sophie.marrone@email.com",
+    phone: "+393334445556",
+    address: "Via Pasta 10",
+    city: "Naples",
+    postalCode: "80100",
+    country: "Italy",
     isActive: true,
     loyaltyPoints: 0,
-    preferences: ['art', 'music'],
+    preferences: ["art", "music"],
   };
 
-  const createResponse = await newRequest('customers', newCustomer);
+  const createResponse = await newRequest("customers", newCustomer);
   expect(createResponse.status).to.equal(200);
   const createdIds = (await createResponse.json()) as string[];
   expect(createdIds).to.have.length(1);
-  expect(createdIds[0]).to.be.a('string');
+  expect(createdIds[0]).to.be.a("string");
 
-  const getResponse = await getRequest('customers', { id: createdIds[0] });
+  const getResponse = await getRequest("customers", { id: createdIds[0] });
   expect(getResponse.status).to.equal(200);
   const customer = (await getResponse.json()) as Customer;
-  await validateObject(customer, newCustomer, ['firstName', 'lastName', 'email', 'city']);
+  await validateObject(customer, newCustomer, [
+    "firstName",
+    "lastName",
+    "email",
+    "city",
+  ]);
 
   const updateData = {
     ...newCustomer,
     loyaltyPoints: 50,
-    preferences: ['art', 'music', 'travel'],
+    preferences: ["art", "music", "travel"],
   };
-  const updateResponse = await editRequest('customers', updateData, { id: createdIds[0] });
+  const updateResponse = await editRequest("customers", updateData, {
+    id: createdIds[0],
+  });
   expect(updateResponse.status).to.equal(200);
 
   const updatedCustomer = await customerModel.get(createdIds[0]);
   expect(updatedCustomer?.loyaltyPoints).to.equal(50);
-  expect(updatedCustomer?.preferences).to.include('travel');
+  expect(updatedCustomer?.preferences).to.include("travel");
 
-  const listResponse = await listRequest('customers', {
-    sortKey: 'registrationDate',
-    sortDirection: 'desc',
-    limit: '2',
+  const listResponse = await listRequest("customers", {
+    sortKey: "registrationDate",
+    sortDirection: "desc",
+    limit: "2",
   });
   expect(listResponse.status).to.equal(200);
   const listData = (await listResponse.json()) as { results: Customer[] };
@@ -580,43 +627,49 @@ async function workflowProductManagement() {
   const { productModel } = await createTestData();
 
   const newProduct = {
-    sku: 'HEADPHONES-005',
-    name: 'Casque audio sans fil',
-    description: 'Casque audio haute qualité avec réduction de bruit',
+    sku: "HEADPHONES-005",
+    name: "Casque audio sans fil",
+    description: "Casque audio haute qualité avec réduction de bruit",
     price: 199.99,
     costPrice: 120.0,
     stockQuantity: 30,
-    category: 'electronics',
-    brand: 'AudioTech',
-    tags: ['wireless', 'noise-cancelling', 'premium'],
-    images: ['headphones1.jpg', 'headphones2.jpg'],
+    category: "electronics",
+    brand: "AudioTech",
+    tags: ["wireless", "noise-cancelling", "premium"],
+    images: ["headphones1.jpg", "headphones2.jpg"],
     isActive: true,
   };
 
-  const createResponse = await newRequest('products', newProduct);
+  const createResponse = await newRequest("products", newProduct);
   expect(createResponse.status).to.equal(200);
   const createdIds = (await createResponse.json()) as string[];
   expect(createdIds).to.have.length(1);
 
   const stockUpdate = { ...newProduct, stockQuantity: 25 };
-  const updateResponse = await editRequest('products', stockUpdate, { id: createdIds[0] });
+  const updateResponse = await editRequest("products", stockUpdate, {
+    id: createdIds[0],
+  });
   expect(updateResponse.status).to.equal(200);
 
   const updatedProduct = await productModel.get(createdIds[0]);
   expect(updatedProduct?.stockQuantity).to.equal(25);
 
-  const listResponse = await listRequest('products', {
-    sortKey: 'price',
-    sortDirection: 'asc',
-    limit: '3',
+  const listResponse = await listRequest("products", {
+    sortKey: "price",
+    sortDirection: "asc",
+    limit: "3",
   });
   expect(listResponse.status).to.equal(200);
   const listData = (await listResponse.json()) as { results: Product[] };
   expect(listData.results).to.have.length(3);
 
-  const categoryResponse = await listRequest('products', { category: 'electronics' });
+  const categoryResponse = await listRequest("products", {
+    category: "electronics",
+  });
   expect(categoryResponse.status).to.equal(200);
-  const categoryData = (await categoryResponse.json()) as { results: Product[] };
+  const categoryData = (await categoryResponse.json()) as {
+    results: Product[];
+  };
   expect(categoryData.results.length).to.be.greaterThan(0);
 }
 
@@ -624,21 +677,21 @@ async function workflowOrderManagement() {
   const { customerIds, productIds, orderModel } = await createTestData();
 
   const orderData = {
-    orderNumber: 'ORD-2024-001',
+    orderNumber: "ORD-2024-001",
     customerId: customerIds[0],
-    status: 'pending',
+    status: "pending",
     totalAmount: 0,
     shippingCost: 9.99,
     taxAmount: 0,
     discountAmount: 0,
     finalAmount: 0,
-    shippingAddress: 'Via Pasta 10, Naples, 80100',
-    billingAddress: 'Via Pasta 10, Naples, 80100',
-    paymentMethod: 'credit_card',
-    notes: 'Express delivery requested',
+    shippingAddress: "Via Pasta 10, Naples, 80100",
+    billingAddress: "Via Pasta 10, Naples, 80100",
+    paymentMethod: "credit_card",
+    notes: "Express delivery requested",
   };
 
-  const orderResponse = await newRequest('orders', orderData);
+  const orderResponse = await newRequest("orders", orderData);
   expect(orderResponse.status).to.equal(200);
   const orderIds = (await orderResponse.json()) as string[];
   expect(orderIds).to.have.length(1);
@@ -661,8 +714,8 @@ async function workflowOrderManagement() {
     discount: 50.0,
   };
 
-  const item1Response = await newRequest('order-items', orderItem1);
-  const item2Response = await newRequest('order-items', orderItem2);
+  const item1Response = await newRequest("order-items", orderItem1);
+  const item2Response = await newRequest("order-items", orderItem2);
   expect(item1Response.status).to.equal(200);
   expect(item2Response.status).to.equal(200);
 
@@ -677,19 +730,23 @@ async function workflowOrderManagement() {
     finalAmount,
   };
 
-  const updateResponse = await editRequest('orders', orderUpdate, { id: orderIds[0] });
+  const updateResponse = await editRequest("orders", orderUpdate, {
+    id: orderIds[0],
+  });
   expect(updateResponse.status).to.equal(200);
 
   const updatedOrder = await orderModel.get(orderIds[0]);
   expect(updatedOrder?.totalAmount).to.equal(totalAmount);
   expect(updatedOrder?.finalAmount).to.equal(finalAmount);
 
-  const statusUpdate = { ...orderData, status: 'processing' };
-  const statusResponse = await editRequest('orders', statusUpdate, { id: orderIds[0] });
+  const statusUpdate = { ...orderData, status: "processing" };
+  const statusResponse = await editRequest("orders", statusUpdate, {
+    id: orderIds[0],
+  });
   expect(statusResponse.status).to.equal(200);
 
   const finalOrder = await orderModel.get(orderIds[0]);
-  expect(finalOrder?.status).to.equal('processing');
+  expect(finalOrder?.status).to.equal("processing");
 }
 
 async function stockManagementAndAutomaticUpdate() {
@@ -699,18 +756,24 @@ async function stockManagementAndAutomaticUpdate() {
   const initialStock = initialProduct?.stockQuantity || 0;
 
   const stockReduction = { ...initialProduct, stockQuantity: initialStock - 3 };
-  const updateResponse = await editRequest('products', stockReduction, { id: productIds[0] });
+  const updateResponse = await editRequest("products", stockReduction, {
+    id: productIds[0],
+  });
   expect(updateResponse.status).to.equal(200);
 
   const updatedProduct = await productModel.get(productIds[0]);
   expect(updatedProduct?.stockQuantity).to.equal(initialStock - 3);
 
   const invalidStock = { stockQuantity: -5 };
-  const invalidResponse = await editRequest('products', invalidStock, { id: productIds[0] });
+  const invalidResponse = await editRequest("products", invalidStock, {
+    id: productIds[0],
+  });
   expect(invalidResponse.status).to.equal(400);
 
   const restock = { ...initialProduct, stockQuantity: initialStock + 10 };
-  const restockResponse = await editRequest('products', restock, { id: productIds[0] });
+  const restockResponse = await editRequest("products", restock, {
+    id: productIds[0],
+  });
   expect(restockResponse.status).to.equal(200);
 
   const restockedProduct = await productModel.get(productIds[0]);
@@ -720,37 +783,44 @@ async function stockManagementAndAutomaticUpdate() {
 async function advancedSearchAndFiltering() {
   await createTestData();
 
-  const categoryResponse = await listRequest('products', {
-    category: 'electronics',
-    sortKey: 'price',
-    sortDirection: 'desc',
+  const categoryResponse = await listRequest("products", {
+    category: "electronics",
+    sortKey: "price",
+    sortDirection: "desc",
   });
   expect(categoryResponse.status).to.equal(200);
-  const categoryData = (await categoryResponse.json()) as { results: Product[] };
+  const categoryData = (await categoryResponse.json()) as {
+    results: Product[];
+  };
   expect(categoryData.results.length).to.be.greaterThan(0);
 
-  const activeCustomersResponse = await listRequest('customers', {
-    isActive: 'true',
-    sortKey: 'loyaltyPoints',
-    sortDirection: 'desc',
+  const activeCustomersResponse = await listRequest("customers", {
+    isActive: "true",
+    sortKey: "loyaltyPoints",
+    sortDirection: "desc",
   });
   expect(activeCustomersResponse.status).to.equal(200);
-  const activeCustomersData = (await activeCustomersResponse.json()) as { results: Customer[] };
+  const activeCustomersData = (await activeCustomersResponse.json()) as {
+    results: Customer[];
+  };
   expect(activeCustomersData.results.length).to.be.greaterThan(0);
 
-  const paginatedResponse = await listRequest('products', {
-    limit: '2',
-    offset: '1',
+  const paginatedResponse = await listRequest("products", {
+    limit: "2",
+    offset: "1",
   });
   expect(paginatedResponse.status).to.equal(200);
-  const paginatedData = (await paginatedResponse.json()) as { results: Product[]; total: number };
+  const paginatedData = (await paginatedResponse.json()) as {
+    results: Product[];
+    total: number;
+  };
   expect(paginatedData.results).to.have.length(2);
   expect(paginatedData.total).to.be.greaterThan(2);
 
-  const pendingOrdersResponse = await listRequest('orders', {
-    status: 'pending',
-    sortKey: 'createdAt',
-    sortDirection: 'desc',
+  const pendingOrdersResponse = await listRequest("orders", {
+    status: "pending",
+    sortKey: "createdAt",
+    sortDirection: "desc",
   });
   expect(pendingOrdersResponse.status).to.equal(200);
 }
@@ -759,25 +829,31 @@ async function clientPreferencesManagement() {
   const { customerIds, customerModel } = await createTestData();
 
   const customer = await customerModel.get(customerIds[0]);
-  const newPreferences = ['electronics', 'gaming', 'tech'];
+  const newPreferences = ["electronics", "gaming", "tech"];
   const preferenceUpdate = { ...customer, preferences: newPreferences };
-  const updateResponse = await editRequest('customers', preferenceUpdate, { id: customerIds[0] });
+  const updateResponse = await editRequest("customers", preferenceUpdate, {
+    id: customerIds[0],
+  });
   expect(updateResponse.status).to.equal(200);
 
   const updatedCustomer = await customerModel.get(customerIds[0]);
   expect(updatedCustomer?.preferences).to.deep.equal(newPreferences);
 
-  const electronicsResponse = await listRequest('products', {
-    category: 'electronics',
-    sortKey: 'price',
-    sortDirection: 'asc',
+  const electronicsResponse = await listRequest("products", {
+    category: "electronics",
+    sortKey: "price",
+    sortDirection: "asc",
   });
   expect(electronicsResponse.status).to.equal(200);
-  const electronicsData = (await electronicsResponse.json()) as { results: Product[] };
+  const electronicsData = (await electronicsResponse.json()) as {
+    results: Product[];
+  };
   expect(electronicsData.results.length).to.be.greaterThan(0);
 
   const loyaltyUpdate = { ...updatedCustomer, loyaltyPoints: 200 };
-  const loyaltyResponse = await editRequest('customers', loyaltyUpdate, { id: customerIds[0] });
+  const loyaltyResponse = await editRequest("customers", loyaltyUpdate, {
+    id: customerIds[0],
+  });
   expect(loyaltyResponse.status).to.equal(200);
 
   const customerWithLoyalty = await customerModel.get(customerIds[0]);
@@ -786,66 +862,76 @@ async function clientPreferencesManagement() {
 
 async function errorManagementAndComplexValidation() {
   const invalidCustomer = {
-    firstName: 'Test',
-    lastName: 'User',
-    email: 'invalid-email',
-    phone: '123',
+    firstName: "Test",
+    lastName: "User",
+    email: "invalid-email",
+    phone: "123",
     isActive: true,
     loyaltyPoints: 0,
-    preferences: ['test'],
+    preferences: ["test"],
   };
 
-  const invalidEmailResponse = await newRequest('customers', invalidCustomer);
+  const invalidEmailResponse = await newRequest("customers", invalidCustomer);
   expect(invalidEmailResponse.status).to.equal(400);
   const emailError = await invalidEmailResponse.text();
-  expect(emailError).to.include('email');
+  expect(emailError).to.include("email");
 
   const invalidProduct = {
-    sku: 'TEST-001',
-    name: 'Test Product',
+    sku: "TEST-001",
+    name: "Test Product",
     price: -50.0,
     stockQuantity: 10,
-    category: 'test',
+    category: "test",
     isActive: true,
   };
 
-  const invalidPriceResponse = await newRequest('products', invalidProduct);
+  const invalidPriceResponse = await newRequest("products", invalidProduct);
   expect(invalidPriceResponse.status).to.equal(400);
   const priceError = await invalidPriceResponse.text();
-  expect(priceError).to.include('price');
+  expect(priceError).to.include("price");
 
   const invalidOrderItem = {
-    orderId: 'fake-order-id',
-    productId: 'fake-product-id',
+    orderId: "fake-order-id",
+    productId: "fake-product-id",
     quantity: 0,
     unitPrice: 10.0,
     totalPrice: 0,
     discount: 0,
   };
 
-  const invalidQuantityResponse = await newRequest('order-items', invalidOrderItem);
+  const invalidQuantityResponse = await newRequest(
+    "order-items",
+    invalidOrderItem,
+  );
   expect(invalidQuantityResponse.status).to.equal(400);
   const quantityError = await invalidQuantityResponse.text();
-  expect(quantityError).to.include('quantity');
+  expect(quantityError).to.include("quantity");
 
   const { customerIds } = await createTestData();
-  const invalidStatusUpdate = { status: 'invalid_status' };
-  const invalidStatusResponse = await editRequest('orders', invalidStatusUpdate, { id: customerIds[0] });
+  const invalidStatusUpdate = { status: "invalid_status" };
+  const invalidStatusResponse = await editRequest(
+    "orders",
+    invalidStatusUpdate,
+    { id: customerIds[0] },
+  );
   expect(invalidStatusResponse.status).to.equal(400);
 
-  const invalidRouteResponse = await request('customers', 'nonexistent', 'GET');
+  const invalidRouteResponse = await request("customers", "nonexistent", "GET");
   expect(invalidRouteResponse.status).to.equal(404);
 
   const missingFieldsCustomer = {
-    firstName: 'Test',
-    email: 'test@example.com',
+    firstName: "Test",
+    email: "test@example.com",
     isActive: true,
     loyaltyPoints: 0,
-    preferences: ['test'],
+    preferences: ["test"],
   };
 
-  const missingFieldsResponse = await newRequest('customers', missingFieldsCustomer);
+  const missingFieldsResponse = await newRequest(
+    "customers",
+    missingFieldsCustomer,
+  );
   expect(missingFieldsResponse.status).to.equal(400);
   const missingFieldsError = await missingFieldsResponse.text();
-  expect(missingFieldsError).to.include('lastName');
+  expect(missingFieldsError).to.include("lastName");
 }

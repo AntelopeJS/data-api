@@ -1,26 +1,45 @@
-import { MakeParameterAndPropertyDecorator } from '@ajs/core/beta/decorators';
-import { RequestContext, SetParameterProvider } from '@ajs/api/beta';
-import { Datum, Stream, Table, ValueProxy, SchemaInstance } from '@ajs/database/beta';
-import { DataModel } from '@ajs/database-decorators/beta/model';
-import { assert } from '@ajs/api-util/beta';
-import { DataAPIMeta, FilterValue } from './metadata';
-import { GetDataControllerMeta } from '.';
-import { fromDatabase, lock, toPlainData, unlock, unlockrequest } from '@ajs/database-decorators/beta/modifiers/common';
-import { Constructible } from '@ajs/database-decorators/beta/common';
+import { type RequestContext, SetParameterProvider } from "@ajs/api/beta";
+import { assert } from "@ajs/api-util/beta";
+import { MakeParameterAndPropertyDecorator } from "@ajs/core/beta/decorators";
+import {
+  type Datum,
+  type SchemaInstance,
+  Stream,
+  type Table,
+  type ValueProxy,
+} from "@ajs/database/beta";
+import type { Constructible } from "@ajs/database-decorators/beta/common";
+import type { DataModel } from "@ajs/database-decorators/beta/model";
+import {
+  fromDatabase,
+  lock,
+  toPlainData,
+  unlock,
+  unlockrequest,
+} from "@ajs/database-decorators/beta/modifiers/common";
+import { GetDataControllerMeta } from ".";
+import type { DataAPIMeta, FilterValue } from "./metadata";
 
 export namespace Parameters {
-  export function GetOptionOverrides<T extends Record<string, any>>(reqCtx: RequestContext): T {
+  export function GetOptionOverrides<T extends Record<string, any>>(
+    reqCtx: RequestContext,
+  ): T {
     return (<any>reqCtx).dataAPIEntry?.options ?? {};
   }
 
-  export function ExtractFilters(reqCtx: RequestContext, meta: DataAPIMeta): Record<string, FilterValue> {
+  export function ExtractFilters(
+    reqCtx: RequestContext,
+    meta: DataAPIMeta,
+  ): Record<string, FilterValue> {
     const result: Record<string, FilterValue> = {};
     for (const filter of Object.keys(meta.filters)) {
       const filter_key = `filter_${filter}`;
       if (reqCtx.url.searchParams.has(filter_key)) {
-        const searchVal = reqCtx.url.searchParams.get(filter_key)!;
+        const searchVal = reqCtx.url.searchParams.get(filter_key) ?? "";
         const match = searchVal.match(/([^:]+):(.*)/);
-        result[filter] = match ? [match[2], match[1] as FilterValue[1]] : [searchVal, 'eq'];
+        result[filter] = match
+          ? [match[2], match[1] as FilterValue[1]]
+          : [searchVal, "eq"];
       }
     }
     return result;
@@ -28,13 +47,16 @@ export namespace Parameters {
 
   const converters = {
     number: (val: string) => parseFloat(val),
-    int: (val: string) => parseInt(val),
-    bool: (val: string) => (val === '0' ? false : true),
+    int: (val: string) => parseInt(val, 10),
+    bool: (val: string) => val !== "0",
     string: (val: string) => val,
   };
   type ConvertersKey = keyof typeof converters;
   type GenericParams<T extends Record<string, any>> = {
-    [K in keyof T]: ConvertersKey | `multi:${ConvertersKey}` | ((reqCtx: RequestContext, meta: DataAPIMeta) => any);
+    [K in keyof T]:
+      | ConvertersKey
+      | `multi:${ConvertersKey}`
+      | ((reqCtx: RequestContext, meta: DataAPIMeta) => any);
   };
   export function ExtractGeneric<T extends Record<string, any>>(
     reqCtx: RequestContext,
@@ -46,8 +68,8 @@ export namespace Parameters {
     for (const key of Object.keys(dynamic)) {
       if (!(key in result)) {
         const extractor = dynamic[key];
-        if (typeof extractor === 'string') {
-          if (extractor.startsWith('multi:')) {
+        if (typeof extractor === "string") {
+          if (extractor.startsWith("multi:")) {
             const converter = converters[<ConvertersKey>extractor.substring(6)];
             result[key as keyof T] = reqCtx.url.searchParams
               .getAll(key)
@@ -55,7 +77,9 @@ export namespace Parameters {
           } else {
             const searchVal = reqCtx.url.searchParams.get(key);
             if (searchVal !== null) {
-              result[key as keyof T] = converters[<ConvertersKey>extractor](searchVal) as any;
+              result[key as keyof T] = converters[<ConvertersKey>extractor](
+                searchVal,
+              ) as any;
             }
           }
         } else {
@@ -73,7 +97,7 @@ export namespace Parameters {
     limit?: number;
 
     sortKey?: string;
-    sortDirection?: 'asc' | 'desc';
+    sortDirection?: "asc" | "desc";
 
     maxPage?: number;
     noForeign?: boolean;
@@ -87,14 +111,20 @@ export namespace Parameters {
       const meta = GetDataControllerMeta(this);
       const params = ExtractGeneric<ListParameters>(context, meta, {
         filters: ExtractFilters,
-        offset: 'int',
-        limit: 'int',
-        sortKey: 'string',
-        sortDirection: 'string',
+        offset: "int",
+        limit: "int",
+        sortKey: "string",
+        sortDirection: "string",
       });
 
-      assert(!params.sortKey || meta.fields[params.sortKey]?.sortable, 400, 'Field is not sortable.');
-      params.limit = params.limit ? Math.min(params.limit, params.maxPage ?? 100) : params.maxPage;
+      assert(
+        !params.sortKey || meta.fields[params.sortKey]?.sortable,
+        400,
+        "Field is not sortable.",
+      );
+      params.limit = params.limit
+        ? Math.min(params.limit, params.maxPage ?? 100)
+        : params.maxPage;
 
       return params;
     }),
@@ -108,11 +138,15 @@ export namespace Parameters {
 
   export const Get = MakeParameterAndPropertyDecorator((target, key, param) =>
     SetParameterProvider(target, key, param, function (this: unknown, context) {
-      const params = ExtractGeneric<GetParameters>(context, GetDataControllerMeta(this), {
-        id: 'string',
-      });
+      const params = ExtractGeneric<GetParameters>(
+        context,
+        GetDataControllerMeta(this),
+        {
+          id: "string",
+        },
+      );
 
-      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
+      assert(params.id && typeof params.id === "string", 400, "Missing id.");
 
       return params;
     }),
@@ -124,7 +158,11 @@ export namespace Parameters {
 
   export const New = MakeParameterAndPropertyDecorator((target, key, param) =>
     SetParameterProvider(target, key, param, function (this: unknown, context) {
-      const params = ExtractGeneric<NewParameters>(context, GetDataControllerMeta(this), {});
+      const params = ExtractGeneric<NewParameters>(
+        context,
+        GetDataControllerMeta(this),
+        {},
+      );
 
       return params;
     }),
@@ -138,11 +176,15 @@ export namespace Parameters {
 
   export const Edit = MakeParameterAndPropertyDecorator((target, key, param) =>
     SetParameterProvider(target, key, param, function (this: unknown, context) {
-      const params = ExtractGeneric<EditParameters>(context, GetDataControllerMeta(this), {
-        id: 'string',
-      });
+      const params = ExtractGeneric<EditParameters>(
+        context,
+        GetDataControllerMeta(this),
+        {
+          id: "string",
+        },
+      );
 
-      assert(params.id && typeof params.id === 'string', 400, 'Missing id.');
+      assert(params.id && typeof params.id === "string", 400, "Missing id.");
 
       return params;
     }),
@@ -152,22 +194,39 @@ export namespace Parameters {
     id: string[];
   }
 
-  export const Delete = MakeParameterAndPropertyDecorator((target, key, param) =>
-    SetParameterProvider(target, key, param, function (this: unknown, context) {
-      const params = ExtractGeneric<DeleteParameters>(context, GetDataControllerMeta(this), {
-        id: 'multi:string',
-      });
+  export const Delete = MakeParameterAndPropertyDecorator(
+    (target, key, param) =>
+      SetParameterProvider(
+        target,
+        key,
+        param,
+        function (this: unknown, context) {
+          const params = ExtractGeneric<DeleteParameters>(
+            context,
+            GetDataControllerMeta(this),
+            {
+              id: "multi:string",
+            },
+          );
 
-      assert(params.id && Array.isArray(params.id) && params.id.length > 0, 400, 'Missing id.');
+          assert(
+            params.id && Array.isArray(params.id) && params.id.length > 0,
+            400,
+            "Missing id.",
+          );
 
-      return params;
-    }),
+          return params;
+        },
+      ),
   );
 }
 
 export namespace Query {
-  export function GetModel(obj: any, meta: DataAPIMeta): InstanceType<DataModel> & { constructor: DataModel } {
-    assert(meta.modelKey, 500, 'Missing model key.');
+  export function GetModel(
+    obj: any,
+    meta: DataAPIMeta,
+  ): InstanceType<DataModel> & { constructor: DataModel } {
+    assert(meta.modelKey, 500, "Missing model key.");
     return obj[meta.modelKey];
   }
 
@@ -196,11 +255,15 @@ export namespace Query {
           continue;
         }
         const [table, _tableClass, index, _multi, pluckField] = field.foreign;
-        let other = db.table(table);
+        const other = db.table(table);
         if (pluckField) {
-          query = query.lookup(other.pluck('_internal', ...pluckField) as Table<any>, name, index || '_id');
+          query = query.lookup(
+            other.pluck("_internal", ...pluckField) as Table<any>,
+            name,
+            index || "_id",
+          );
         } else {
-          query = query.lookup(other, name, index || '_id');
+          query = query.lookup(other, name, index || "_id");
         }
       }
       return query;
@@ -213,15 +276,28 @@ export namespace Query {
           }
           const [table, _tableClass, index, multi, pluckField] = field.foreign;
           if (multi) {
-            changedFields[name] = (obj.key(name) as ValueProxy<string[]>).default([]).map((val) => {
-              let foreignObject: Datum<any> = Get(db.table(table), val, index);
-              if (pluckField) {
-                foreignObject = foreignObject.pluck('_internal', ...pluckField);
-              }
-              return foreignObject.default(null);
-            });
+            changedFields[name] = (obj.key(name) as ValueProxy<string[]>)
+              .default([])
+              .map((val) => {
+                let foreignObject: Datum<any> = Get(
+                  db.table(table),
+                  val,
+                  index,
+                );
+                if (pluckField) {
+                  foreignObject = foreignObject.pluck(
+                    "_internal",
+                    ...pluckField,
+                  );
+                }
+                return foreignObject.default(null);
+              });
           } else {
-            changedFields[name] = Get(db.table(table), obj.key(name) as ValueProxy<string>, index).default(null);
+            changedFields[name] = Get(
+              db.table(table),
+              obj.key(name) as ValueProxy<string>,
+              index,
+            ).default(null);
           }
         }
         return obj.merge(changedFields);
@@ -230,8 +306,15 @@ export namespace Query {
     }
   }
 
-  export async function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, action?: string, onlyList?: boolean) {
-    const readable = meta.readable[action ?? '_default'] ?? meta.readable['_default'];
+  export async function ReadProperties(
+    obj: any,
+    meta: DataAPIMeta,
+    dbData: any,
+    action?: string,
+    onlyList?: boolean,
+  ) {
+    const readable =
+      meta.readable[action ?? "_default"] ?? meta.readable._default;
     const instance: Record<string, any> = { ...obj };
     const res: Record<string, any> = {};
     for (const [key, field] of readable.props) {
@@ -248,7 +331,7 @@ export namespace Query {
         continue;
       }
       const val = field.desc?.get?.apply(instance);
-      res[key] = await (typeof val === 'function' ? val() : val);
+      res[key] = await (typeof val === "function" ? val() : val);
     }
     return res;
   }
@@ -260,7 +343,8 @@ export namespace Query {
     action?: string,
     existingDBData?: Record<string, any>,
   ) {
-    const writable = meta.writable[action ?? '_default'] ?? meta.writable['_default'];
+    const writable =
+      meta.writable[action ?? "_default"] ?? meta.writable._default;
     const instance: Record<string, any> = { ...obj };
     const dbData: Record<string, any> = existingDBData || {};
     Object.setPrototypeOf(dbData, meta.tableClass.prototype);
@@ -286,8 +370,14 @@ export namespace Query {
     return dbData;
   }
 
-  export function Get(table: Table<any>, id: string | ValueProxy<string>, index?: string) {
-    return index ? table.getAll(id as string, index).nth(0) : table.get(id as string);
+  export function Get(
+    table: Table<any>,
+    id: string | ValueProxy<string>,
+    index?: string,
+  ) {
+    return index
+      ? table.getAll(id as string, index).nth(0)
+      : table.get(id as string);
   }
 
   export function List<T extends Record<string, any>>(
@@ -295,46 +385,58 @@ export namespace Query {
     meta: DataAPIMeta,
     request: Table<T>,
     reqCtx: RequestContext,
-    sorting?: [string, 'asc' | 'desc' | undefined],
+    sorting?: [string, "asc" | "desc" | undefined],
     filters?: Record<string, FilterValue>,
   ): [sorted: Stream<T>, total: Datum<number>] {
-    const filterList = Object.entries(meta.filters).filter(([name]) => filters && name in filters);
-    const indexFilter = filterList.find(([name]) => filters![name][1] === 'eq' && meta.fields[name]?.indexable)?.[0];
-    const index = indexFilter ? meta.fields[indexFilter].dbName || indexFilter : undefined;
+    const filterList = Object.entries(meta.filters).filter(
+      ([name]) => filters && name in filters,
+    );
+    const indexFilter = filterList.find(
+      ([name]) => filters?.[name][1] === "eq" && meta.fields[name]?.indexable,
+    )?.[0];
+    const index = indexFilter
+      ? meta.fields[indexFilter].dbName || indexFilter
+      : undefined;
+    const indexedFilter = indexFilter ? filters?.[indexFilter] : undefined;
 
-    let tmpRequest = index ? request.getAll(filters![indexFilter!][0], index) : request;
+    let tmpRequest = index
+      ? request.getAll(indexedFilter?.[0] ?? "", index)
+      : request;
 
-    const shouldSort = sorting && meta.fields[sorting[0]]?.sortable;
-    if (shouldSort && shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0], sorting[1] ?? 'asc');
+    const sortField = sorting?.[0];
+    const shouldSort = sortField ? meta.fields[sortField]?.sortable : undefined;
+    if (shouldSort?.indexed && sortField) {
+      tmpRequest = tmpRequest.orderBy(sortField, sorting?.[1] ?? "asc");
     }
     if (filterList.length > 0) {
       // TODO: rework for modifier-affected fields (unlockrequest)
-      tmpRequest = filterList.reduce(
-        (req, [name, filter]) =>
-          name === indexFilter
-            ? req
-            : req.filter((row) =>
-                filter(
-                  Object.assign(reqCtx, { this: obj }),
-                  Validation.UnlockRequest(obj, meta, row, name),
-                  name,
-                  filters![name][0],
-                  filters![name][1],
-                  row as ValueProxy<Record<string, any>>,
-                ),
+      tmpRequest = filterList.reduce((req, [name, filter]) => {
+        const filterValue = filters?.[name];
+        if (!filterValue) return req;
+        return name === indexFilter
+          ? req
+          : req.filter((row) =>
+              filter(
+                Object.assign(reqCtx, { this: obj }),
+                Validation.UnlockRequest(obj, meta, row, name),
+                name,
+                filterValue[0],
+                filterValue[1],
+                row as ValueProxy<Record<string, any>>,
               ),
-        tmpRequest,
-      );
+            );
+      }, tmpRequest);
     }
-    if (shouldSort && !shouldSort.indexed) {
-      tmpRequest = tmpRequest.orderBy(sorting[0], sorting[1] ?? 'asc');
+    if (shouldSort && !shouldSort.indexed && sortField) {
+      tmpRequest = tmpRequest.orderBy(sortField, sorting?.[1] ?? "asc");
     }
     return [tmpRequest, tmpRequest.count()];
   }
 
   export function Delete(table: Table<any>, id: string | string[]) {
-    return Array.isArray(id) ? table.getAll(id).delete() : table.get(id).delete();
+    return Array.isArray(id)
+      ? table.getAll(id).delete()
+      : table.get(id).delete();
   }
 }
 
@@ -343,17 +445,32 @@ export namespace Validation {
     const missing = Object.entries(meta.fields)
       .filter(([name, field]) => field.mandatory?.has(type) && !(name in obj))
       .map(([name]) => name);
-    assert(missing.length === 0, 400, `Missing mandatory fields: ${missing.join(', ')}`);
+    assert(
+      missing.length === 0,
+      400,
+      `Missing mandatory fields: ${missing.join(", ")}`,
+    );
   }
 
-  export async function ValidateTypes(meta: DataAPIMeta, obj: Record<string, any>) {
+  export async function ValidateTypes(
+    meta: DataAPIMeta,
+    obj: Record<string, any>,
+  ) {
     const invalid: string[] = [];
     for (const [name, field] of Object.entries(meta.fields)) {
-      if (field.validator && name in obj && !(await field.validator(obj[name]))) {
+      if (
+        field.validator &&
+        name in obj &&
+        !(await field.validator(obj[name]))
+      ) {
         invalid.push(name);
       }
     }
-    assert(invalid.length === 0, 400, `Invalid field type(s): ${invalid.join(', ')}`);
+    assert(
+      invalid.length === 0,
+      400,
+      `Invalid field type(s): ${invalid.join(", ")}`,
+    );
   }
 
   export function Lock(obj: any, meta: DataAPIMeta, data: any) {
@@ -365,9 +482,15 @@ export namespace Validation {
 
   export function Unlock(obj: any, meta: DataAPIMeta, dbData: any) {
     for (const [name, field] of Object.entries(meta.fields)) {
-      if (field.foreign && dbData[name] && typeof dbData[name] === 'object' && field.foreign[1]) {
+      if (
+        field.foreign &&
+        dbData[name] &&
+        typeof dbData[name] === "object" &&
+        field.foreign[1]
+      ) {
+        const foreignSchema = field.foreign[1];
         dbData[name] = Array.isArray(dbData[name])
-          ? dbData[name].map((entry) => fromDatabase(entry, field.foreign![1]!))
+          ? dbData[name].map((entry) => fromDatabase(entry, foreignSchema))
           : fromDatabase(dbData[name], field.foreign[1]);
       }
     }
@@ -375,7 +498,7 @@ export namespace Validation {
       const key = obj[field];
       unlock(dbData, modifier, undefined, key);
       for (const [foreign, fieldData] of Object.entries(meta.fields)) {
-        if (fieldData.foreign && typeof dbData[foreign] === 'object') {
+        if (fieldData.foreign && typeof dbData[foreign] === "object") {
           unlock(dbData[foreign], modifier, undefined, key);
         }
       }
@@ -388,25 +511,37 @@ export namespace Validation {
     row: ValueProxy<T>,
     field: K,
   ): ValueProxy<T[K]> {
-    const modifiers = Array.from(meta.modifierKeys.entries()).map(([modifier, field]) => ({
-      modifier,
-      args: [obj[field]],
-    }));
-    return unlockrequest(meta.tableClass as Constructible<T>, row, field, modifiers);
+    const modifiers = Array.from(meta.modifierKeys.entries()).map(
+      ([modifier, field]) => ({
+        modifier,
+        args: [obj[field]],
+      }),
+    );
+    return unlockrequest(
+      meta.tableClass as Constructible<T>,
+      row,
+      field,
+      modifiers,
+    );
   }
 
-  export function ClearInternal(meta: DataAPIMeta, obj: Record<string, any> | Array<Record<string, any>>) {
+  export function ClearInternal(
+    meta: DataAPIMeta,
+    obj: Record<string, any> | Array<Record<string, any>>,
+  ) {
     const results = Array.isArray(obj) ? obj : [obj];
 
-    const foreignFields = Object.entries(meta.fields).filter(([, field]) => field.foreign);
+    const foreignFields = Object.entries(meta.fields).filter(
+      ([, field]) => field.foreign,
+    );
     for (const entry of results) {
       delete entry._internal;
       for (const [name, { foreign }] of foreignFields) {
         if (
           foreign &&
           entry[name] &&
-          typeof entry[name] === 'object' &&
-          (!Array.isArray(entry[name]) || typeof entry[name][0] === 'object')
+          typeof entry[name] === "object" &&
+          (!Array.isArray(entry[name]) || typeof entry[name][0] === "object")
         ) {
           const processForeign = (data: any) => {
             const plain = toPlainData(data);
@@ -419,7 +554,9 @@ export namespace Validation {
             }
             return plainPlucked;
           };
-          entry[name] = Array.isArray(entry[name]) ? entry[name].map(processForeign) : processForeign(entry[name]);
+          entry[name] = Array.isArray(entry[name])
+            ? entry[name].map(processForeign)
+            : processForeign(entry[name]);
         }
       }
     }

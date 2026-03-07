@@ -1,10 +1,19 @@
-import { GetMetadata } from '@ajs/core/beta';
-import { Class, MakeMethodAndPropertyDecorator, MakePropertyDecorator } from '@ajs/core/beta/decorators';
-import { RequestContext } from '@ajs/api/beta';
-import { ValueProxy, ValueProxyOrValue } from '@ajs/database/beta';
-import { DataControllerCallbackWithOptions } from '.';
-import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
-import { getTablesForSchema, Table, DatumStaticMetadata, getMetadata } from '@ajs/database-decorators/beta';
+import type { RequestContext } from "@ajs/api/beta";
+import { GetMetadata } from "@ajs/core/beta";
+import {
+  type Class,
+  MakeMethodAndPropertyDecorator,
+  MakePropertyDecorator,
+} from "@ajs/core/beta/decorators";
+import type { ValueProxy, ValueProxyOrValue } from "@ajs/database/beta";
+import {
+  DatumStaticMetadata,
+  getMetadata,
+  getTablesForSchema,
+  type Table,
+} from "@ajs/database-decorators/beta";
+import type { ContainerModifier } from "@ajs/database-decorators/beta/modifiers/common";
+import type { DataControllerCallbackWithOptions } from ".";
 
 /**
  * Field access mode enum.
@@ -54,7 +63,13 @@ export interface FieldData {
   /**
    * Foreign key reference.
    */
-  foreign?: [table: string, tableClass?: Class<Table>, index?: string, multi?: true, pluck?: string[]];
+  foreign?: [
+    table: string,
+    tableClass?: Class<Table>,
+    index?: string,
+    multi?: true,
+    pluck?: string[],
+  ];
 
   /**
    * Value validator callback.
@@ -72,13 +87,16 @@ export interface FieldData {
   indexable?: boolean;
 }
 
-type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
+type Comparison = "eq" | "ne" | "gt" | "ge" | "lt" | "le";
 export type FilterValue = [value: string, mode: Comparison];
 
 /**
  * Filter callback.
  */
-export type FilterFunction<T extends Record<string, any>, U extends Record<string, any> = Record<string, any>> = (
+export type FilterFunction<
+  T extends Record<string, any>,
+  U extends Record<string, any> = Record<string, any>,
+> = (
   context: RequestContext & { this: T },
   proxy: ValueProxy<any>,
   key: string,
@@ -156,7 +174,8 @@ export class DataAPIMeta {
   /**
    * Registered DataAPI endpoints.
    */
-  public readonly endpoints: Record<string, DataControllerCallbackWithOptions> = {};
+  public readonly endpoints: Record<string, DataControllerCallbackWithOptions> =
+    {};
 
   constructor(public readonly target: Class) {}
 
@@ -175,12 +194,13 @@ export class DataAPIMeta {
     for (const [key, list] of Object.entries(parent.pluck)) {
       this.pluck[key] = new Set(list);
     }
-    if (!('modelKey' in this)) {
+    if (!("modelKey" in this)) {
       this.modelKey = parent.modelKey;
     }
     for (const key of parent.modifierKeys.keys()) {
       if (!this.modifierKeys.has(key)) {
-        this.modifierKeys.set(key, parent.modifierKeys.get(key)!);
+        const value = parent.modifierKeys.get(key);
+        if (value !== undefined) this.modifierKeys.set(key, value);
       }
     }
     this.recomputeAccess();
@@ -198,14 +218,18 @@ export class DataAPIMeta {
   }
 
   private recomputeListable() {
-    Object.values(this.pluck).forEach((set) => set.clear());
+    for (const set of Object.values(this.pluck)) {
+      set.clear();
+    }
     for (const [_, field] of Object.entries(this.fields)) {
       if (field.listable) {
         for (const [mode, names] of Object.entries(field.listable)) {
           if (!(mode in this.pluck)) {
             this.pluck[mode] = new Set();
           }
-          names.forEach((name) => this.pluck[mode].add(name));
+          for (const name of names) {
+            this.pluck[mode].add(name);
+          }
         }
       }
     }
@@ -219,7 +243,7 @@ export class DataAPIMeta {
       delete this.writable[key];
     }
 
-    const actions = new Set<string>(['_default']);
+    const actions = new Set<string>(["_default"]);
     for (const field of Object.values(this.fields)) {
       if (field.modeOverrides) {
         for (const action of Object.keys(field.modeOverrides)) {
@@ -235,17 +259,20 @@ export class DataAPIMeta {
 
     for (const [key, field] of Object.entries(this.fields)) {
       for (const action of actions) {
-        const effectiveMode = action === '_default' ? field.mode : (field.modeOverrides?.[action] ?? field.mode);
+        const effectiveMode =
+          action === "_default"
+            ? field.mode
+            : (field.modeOverrides?.[action] ?? field.mode);
         if (!effectiveMode) {
           continue;
         }
 
         if (effectiveMode & AccessMode.ReadOnly) {
-          const target = field.desc?.get ? 'getters' : 'props';
+          const target = field.desc?.get ? "getters" : "props";
           this.readable[action][target].push([key, field]);
         }
         if (effectiveMode & AccessMode.WriteOnly) {
-          const target = field.desc?.set ? 'setters' : 'props';
+          const target = field.desc?.set ? "setters" : "props";
           this.writable[action][target].push([key, field]);
         }
       }
@@ -258,7 +285,11 @@ export class DataAPIMeta {
    * @param name Field name
    * @param mode Access mode
    */
-  public setMode(name: string, mode: AccessMode, overrides?: Record<string, AccessMode>) {
+  public setMode(
+    name: string,
+    mode: AccessMode,
+    overrides?: Record<string, AccessMode>,
+  ) {
     const field = this.field(name);
     field.mode = mode;
     field.modeOverrides = overrides;
@@ -273,9 +304,18 @@ export class DataAPIMeta {
    * @param requiredFields Boolean or table field list
    * @param mode List mode (default: 'list')
    */
-  public setListable(name: string, requiredFields: boolean | string[], mode = 'list') {
+  public setListable(
+    name: string,
+    requiredFields: boolean | string[],
+    mode = "list",
+  ) {
     const field = this.field(name);
-    const names = typeof requiredFields === 'boolean' ? (requiredFields ? [name] : []) : requiredFields;
+    const names =
+      typeof requiredFields === "boolean"
+        ? requiredFields
+          ? [name]
+          : []
+        : requiredFields;
     if (!field.listable) {
       field.listable = {};
     }
@@ -316,14 +356,41 @@ export class DataAPIMeta {
    * @param index Other table index
    * @param multi Index is a multi index
    */
-  public setForeign(name: string, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]) {
-    const databaseSchema = getTablesForSchema(this.schemaName)!;
-    if (typeof table === 'string') {
-      this.field(name).foreign = [table, databaseSchema[table], index, multi || undefined, pluck || undefined];
+  public setForeign(
+    name: string,
+    table: string | Class<Table>,
+    index?: string,
+    multi?: boolean,
+    pluck?: string[],
+  ) {
+    const databaseSchema = getTablesForSchema(this.schemaName);
+    if (!databaseSchema)
+      throw new Error(`Schema "${this.schemaName}" not found`);
+    if (typeof table === "string") {
+      this.field(name).foreign = [
+        table,
+        databaseSchema[table],
+        index,
+        multi || undefined,
+        pluck || undefined,
+      ];
     } else {
-      const tableName = Object.entries(databaseSchema).find(([, table_]) => table_ === table)![0];
+      const tableName = Object.entries(databaseSchema).find(
+        ([, table_]) => table_ === table,
+      )?.[0];
+      if (!tableName) {
+        throw new Error(
+          `Unable to infer foreign table name for field "${name}"`,
+        );
+      }
 
-      this.field(name).foreign = [tableName, table, index, multi || undefined, pluck || undefined];
+      this.field(name).foreign = [
+        tableName,
+        table,
+        index,
+        multi || undefined,
+        pluck || undefined,
+      ];
     }
     return this;
   }
@@ -334,7 +401,10 @@ export class DataAPIMeta {
    * @param name Field name
    * @param validator Value validator callback
    */
-  public setValidator(name: string, validator?: (value: unknown) => boolean | Promise<boolean>) {
+  public setValidator(
+    name: string,
+    validator?: (value: unknown) => boolean | Promise<boolean>,
+  ) {
     this.field(name).validator = validator;
     return this;
   }
@@ -357,7 +427,11 @@ export class DataAPIMeta {
    * @param func Filter callback
    * @param index
    */
-  public setFilter(name: string, func: FilterFunction<Record<string, any>, Record<string, any>>, useIndex?: boolean) {
+  public setFilter(
+    name: string,
+    func: FilterFunction<Record<string, any>, Record<string, any>>,
+    useIndex?: boolean,
+  ) {
     this.filters[name] = func;
     const field = this.field(name);
     if (useIndex) {
@@ -388,7 +462,10 @@ export class DataAPIMeta {
    * @param name Field name
    * @param modifierClass Modifier
    */
-  public setModifierKey(name: string, modifierClass: typeof ContainerModifier<any>) {
+  public setModifierKey(
+    name: string,
+    modifierClass: typeof ContainerModifier<any>,
+  ) {
     this.modifierKeys.set(modifierClass, name);
     return this;
   }
@@ -399,7 +476,10 @@ export class DataAPIMeta {
    * @param key field name
    * @param endpoint callback information
    */
-  public addEndpoint(key: string, endpoint?: DataControllerCallbackWithOptions) {
+  public addEndpoint(
+    key: string,
+    endpoint?: DataControllerCallbackWithOptions,
+  ) {
     if (!endpoint) {
       delete this.endpoints[key];
     } else {
@@ -414,7 +494,13 @@ export class DataAPIMeta {
  * @param mode Access mode
  */
 export const Access = MakeMethodAndPropertyDecorator(
-  (target, key, desc, mode: AccessMode, overrides?: Record<string, AccessMode>) => {
+  (
+    target,
+    key,
+    desc,
+    mode: AccessMode,
+    overrides?: Record<string, AccessMode>,
+  ) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
       .setMode(key as string, mode, overrides);
@@ -434,7 +520,11 @@ export const Listable = MakeMethodAndPropertyDecorator(
   (target, key, desc, requiredFields?: boolean | string[], mode?: string) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
-      .setListable(key as string, typeof requiredFields !== 'undefined' ? requiredFields : true, mode);
+      .setListable(
+        key as string,
+        typeof requiredFields !== "undefined" ? requiredFields : true,
+        mode,
+      );
   },
 );
 
@@ -443,11 +533,13 @@ export const Listable = MakeMethodAndPropertyDecorator(
  *
  * @param modes DataAPI methods (ex: `new`, `edit`)
  */
-export const Mandatory = MakeMethodAndPropertyDecorator((target, key, desc, ...modes: string[]) => {
-  GetMetadata(target.constructor, DataAPIMeta)
-    .setDescriptor(key as string, desc)
-    .setMandatory(key as string, modes);
-});
+export const Mandatory = MakeMethodAndPropertyDecorator(
+  (target, key, desc, ...modes: string[]) => {
+    GetMetadata(target.constructor, DataAPIMeta)
+      .setDescriptor(key as string, desc)
+      .setMandatory(key as string, modes);
+  },
+);
 
 /**
  * Declares a field as being optional.
@@ -465,11 +557,13 @@ export const Optional = MakeMethodAndPropertyDecorator((target, key, desc) => {
  *
  * @param options Options
  */
-export const Sortable = MakeMethodAndPropertyDecorator((target, key, desc, options?: { noIndex?: boolean }) => {
-  GetMetadata(target.constructor, DataAPIMeta)
-    .setDescriptor(key as string, desc)
-    .setSortable(key as string, true, options?.noIndex ?? false);
-});
+export const Sortable = MakeMethodAndPropertyDecorator(
+  (target, key, desc, options?: { noIndex?: boolean }) => {
+    GetMetadata(target.constructor, DataAPIMeta)
+      .setDescriptor(key as string, desc)
+      .setSortable(key as string, true, options?.noIndex ?? false);
+  },
+);
 
 /**
  * Declares a field to be a foreign key.
@@ -479,7 +573,15 @@ export const Sortable = MakeMethodAndPropertyDecorator((target, key, desc, optio
  * @param multi Index is a multi index
  */
 export const Foreign = MakeMethodAndPropertyDecorator(
-  (target, key, desc, table: string | Class<Table>, index?: string, multi?: boolean, pluck?: string[]) => {
+  (
+    target,
+    key,
+    desc,
+    table: string | Class<Table>,
+    index?: string,
+    multi?: boolean,
+    pluck?: string[],
+  ) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
       .setForeign(key as string, table, index, multi, pluck);
@@ -492,16 +594,27 @@ export const Foreign = MakeMethodAndPropertyDecorator(
  * @param validator Value validator callback
  */
 export const Validator = MakeMethodAndPropertyDecorator(
-  (target, key, desc, validator: (val: unknown) => boolean | Promise<boolean>) => {
+  (
+    target,
+    key,
+    desc,
+    validator: (val: unknown) => boolean | Promise<boolean>,
+  ) => {
     GetMetadata(target.constructor, DataAPIMeta)
       .setDescriptor(key as string, desc)
       .setValidator(key as string, validator);
   },
 );
 
-type ProxyFilterOperator = (proxy: ValueProxy<string>, value: string) => ValueProxyOrValue<boolean>;
+type ProxyFilterOperator = (
+  proxy: ValueProxy<string>,
+  value: string,
+) => ValueProxyOrValue<boolean>;
 type DefaultFilterOperators = Record<Comparison, ProxyFilterOperator>;
-type DefaultFilterFunction = FilterFunction<Record<string, any>, Record<string, any>>;
+type DefaultFilterFunction = FilterFunction<
+  Record<string, any>,
+  Record<string, any>
+>;
 
 const DEFAULT_FILTER_OPERATORS: DefaultFilterOperators = {
   eq: (proxy, value) => proxy.eq(value),
@@ -521,7 +634,8 @@ function applyDefaultFilterMode(
 }
 
 function createDefaultFilter(): DefaultFilterFunction {
-  return (_context, proxy, _key, value, mode) => applyDefaultFilterMode(proxy as ValueProxy<string>, value, mode);
+  return (_context, proxy, _key, value, mode) =>
+    applyDefaultFilterMode(proxy as ValueProxy<string>, value, mode);
 }
 
 const FilterDecoratorFactory = MakePropertyDecorator(
@@ -556,6 +670,11 @@ export const ModelReference = MakePropertyDecorator((target, key) => {
  *
  * @param modifierClass Modifier
  */
-export const ModifierKey = MakePropertyDecorator((target, key, modifierClass: typeof ContainerModifier<any>) => {
-  GetMetadata(target.constructor, DataAPIMeta).setModifierKey(key as string, modifierClass);
-});
+export const ModifierKey = MakePropertyDecorator(
+  (target, key, modifierClass: typeof ContainerModifier<any>) => {
+    GetMetadata(target.constructor, DataAPIMeta).setModifierKey(
+      key as string,
+      modifierClass,
+    );
+  },
+);

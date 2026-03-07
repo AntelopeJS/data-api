@@ -1,22 +1,38 @@
-import { expect } from 'chai';
-import { Schema } from '@ajs/database/beta';
+import path from "node:path";
+import { Controller } from "@ajs/api/beta";
 import {
-  Table,
-  Index,
-  RegisterTable,
-  CreateDatabaseSchemaInstance,
   BasicDataModel,
+  CreateDatabaseSchemaInstance,
+  Index,
   Model,
-} from '@ajs/database-decorators/beta';
-import { Controller } from '@ajs/api/beta';
-import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
-import { Access, AccessMode, Listable, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { editRequest, getFunctionName, getRequest, newRequest } from '../utils';
-import path from 'node:path';
+  RegisterTable,
+  Table,
+} from "@ajs/database-decorators/beta";
+import {
+  DataController,
+  DefaultRoutes,
+  RegisterDataController,
+} from "@ajs.local/data-api/beta";
+import {
+  Access,
+  AccessMode,
+  Listable,
+  ModelReference,
+} from "@ajs.local/data-api/beta/metadata";
+import { expect } from "chai";
+import {
+  editRequest,
+  getFunctionName,
+  getRequest,
+  getSchemaInstance,
+  newRequest,
+} from "../utils";
 
-const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const currentTestName = path
+  .basename(__filename)
+  .replace(/\.test\.(ts|js)$/, "");
 const userTableName = `users-${currentTestName}`;
-const schemaName = 'default';
+const schemaName = "default";
 
 @RegisterTable(userTableName, schemaName)
 class User extends Table {
@@ -32,22 +48,28 @@ class User extends Table {
 class UserModel extends BasicDataModel(User, userTableName) {}
 
 const defaultUserDataset: Partial<User> = {
-  name: 'Jean Test',
-  email: 'jean.test@email.com',
-  role: 'admin',
+  name: "Jean Test",
+  email: "jean.test@email.com",
+  role: "admin",
   age: 30,
 };
 
-describe('Per-Action Access Control', () => {
-  it('writable in new but read-only in edit', async () => await writableInNewReadOnlyInEdit());
-  it('read-only globally but read-write in new', async () => await readOnlyGloballyReadWriteInNew());
+describe("Per-Action Access Control", () => {
+  it("writable in new but read-only in edit", async () =>
+    await writableInNewReadOnlyInEdit());
+  it("read-only globally but read-write in new", async () =>
+    await readOnlyGloballyReadWriteInNew());
 
   after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
   @RegisterDataController()
-  class _PerActionAccessAPI extends DataController(User, DefaultRoutes.All, Controller(`/${testName}`)) {
+  class _PerActionAccessAPI extends DataController(
+    User,
+    DefaultRoutes.All,
+    Controller(`/${testName}`),
+  ) {
     @ModelReference()
     @Model(UserModel)
     declare userModel: UserModel;
@@ -72,27 +94,33 @@ async function _createDataController(testName: string, user: Partial<User>) {
     declare age: number;
   }
   await CreateDatabaseSchemaInstance(schemaName);
-  const database = Schema.get(schemaName)!.instance();
+  const database = getSchemaInstance(schemaName);
   const userModel = new UserModel(database);
   const insertResult = await userModel.insert(user);
   return { id: insertResult[0], userModel };
 }
 
 async function writableInNewReadOnlyInEdit() {
-  const { id, userModel } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id, userModel } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
   const getResponse = await getRequest(getFunctionName(), { id });
   expect(getResponse.status).to.equal(200);
   const data = (await getResponse.json()) as User;
-  expect(data.role).to.equal('admin');
+  expect(data.role).to.equal("admin");
 
-  await editRequest(getFunctionName(), { role: 'user' }, { id });
+  await editRequest(getFunctionName(), { role: "user" }, { id });
   const user = await userModel.get(id);
-  expect(user?.role).to.equal('admin');
+  expect(user?.role).to.equal("admin");
 }
 
 async function readOnlyGloballyReadWriteInNew() {
-  const { id, userModel } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id, userModel } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
   const newResponse = await newRequest(getFunctionName(), defaultUserDataset);
   expect(newResponse.status).to.equal(200);

@@ -1,14 +1,28 @@
-import { GetMetadata } from '@ajs/core/beta';
-import { Class, MakeClassDecorator, ParameterDecorator } from '@ajs/core/beta/decorators';
-import { Route, RawBody, RequestContext, Context, ControllerClass, RegisterRoute, ControllerMeta } from '@ajs/api/beta';
-import { Datum } from '@ajs/database/beta';
-import { getTablesForSchema } from '@ajs/database-decorators/beta/schema';
-import { getMetadata, DatumStaticMetadata } from '@ajs/database-decorators/beta';
-import { assert } from '@ajs/api-util/beta';
-import { DataAPIMeta } from './metadata';
-import { Parameters, Query, Validation } from './components';
-import assert_ from 'assert';
-import { triggerEvent } from '@ajs/database-decorators/beta/modifiers/common';
+import assert_ from "node:assert";
+import {
+  Context,
+  type ControllerClass,
+  ControllerMeta,
+  RawBody,
+  RegisterRoute,
+  type RequestContext,
+  Route,
+} from "@ajs/api/beta";
+import { assert } from "@ajs/api-util/beta";
+import { GetMetadata } from "@ajs/core/beta";
+import {
+  type Class,
+  MakeClassDecorator,
+  type ParameterDecorator,
+} from "@ajs/core/beta/decorators";
+import {
+  DatumStaticMetadata,
+  getMetadata,
+} from "@ajs/database-decorators/beta";
+import { triggerEvent } from "@ajs/database-decorators/beta/modifiers/common";
+import { getTablesForSchema } from "@ajs/database-decorators/beta/schema";
+import { Parameters, Query, Validation } from "./components";
+import { DataAPIMeta } from "./metadata";
 
 export type DataControllerCallback<O = any> = {
   args: (ParameterDecorator | ParameterDecorator[])[];
@@ -23,9 +37,9 @@ export type DataControllerCallbackWithOptions<O = any> = {
 };
 
 export type ExtractCallback<T> = T extends DataControllerCallbackWithOptions
-  ? T['callback']['func']
+  ? T["callback"]["func"]
   : T extends DataControllerCallback
-    ? T['func']
+    ? T["func"]
     : never;
 
 export type DataControllerDef = {
@@ -44,25 +58,34 @@ export function DataController<
   C extends Class,
   P extends DataControllerDef = DataControllerDef,
   Base extends ControllerClass = ControllerClass,
->(tableClass: C, def: P, base: Base): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
+>(
+  tableClass: C,
+  def: P,
+  base: Base,
+): Class<ExtractDefCallbacks<P> & TableHolder<C>> & Base {
   const c = class extends base {
     table!: InstanceType<C>;
   };
   const meta = GetMetadata(c, DataAPIMeta);
   const tableMetadata = getMetadata(tableClass, DatumStaticMetadata);
-  meta.schemaName = tableMetadata.schemaName || 'default';
+  meta.schemaName = tableMetadata.schemaName || "default";
 
   const databaseSchema = getTablesForSchema(meta.schemaName);
-  assert_(databaseSchema, 'Non-existent Database Schema');
+  assert_(databaseSchema, "Non-existent Database Schema");
 
-  const tableName = Object.entries(databaseSchema).find(([, table]) => table === tableClass)?.[0];
-  assert_(tableName, 'Unregistered Database Table');
+  const tableName = Object.entries(databaseSchema).find(
+    ([, table]) => table === tableClass,
+  )?.[0];
+  assert_(tableName, "Unregistered Database Table");
 
   meta.tableClass = tableClass;
   meta.tableName = tableName;
 
   for (const [key, val] of Object.entries(def)) {
-    const entry = 'func' in val ? { endpoint: key, callback: val } : { endpoint: key, ...val };
+    const entry =
+      "func" in val
+        ? { endpoint: key, callback: val }
+        : { endpoint: key, ...val };
     meta.addEndpoint(key, entry);
     // TODO?: should this go in addEndpoint?
     c.prototype[key] = entry.callback.func;
@@ -76,37 +99,50 @@ export const RegisterDataController = MakeClassDecorator((target) => {
     for (let i = 0; i < entry.callback.args.length; ++i) {
       const arg = entry.callback.args[i];
       if (Array.isArray(arg)) {
-        arg.forEach((step) => step(target.prototype, key, i));
+        for (const step of arg) {
+          step(target.prototype, key, i);
+        }
       } else {
         arg(target.prototype, key, i);
       }
     }
     const meta = GetMetadata(<any>target, ControllerMeta);
-    const fullLocation = `${meta.location}/${entry.endpoint ?? key}`.replace(/\/+/g, '/');
+    const fullLocation = `${meta.location}/${entry.endpoint ?? key}`.replace(
+      /\/+/g,
+      "/",
+    );
     RegisterRoute({
       callback: (ctx) => {
         ctx.dataAPIEntry = entry;
       },
       location: fullLocation,
       method: entry.callback.method,
-      mode: 'prefix',
+      mode: "prefix",
       parameters: [{ provider: (ctx) => ctx, modifiers: [] }],
       properties: meta.computed_props,
       proto: target.prototype,
     });
-    Route('handler', entry.callback.method, entry.endpoint)(target.prototype, key, {
-      value: entry.callback.func,
-    });
+    Route("handler", entry.callback.method, entry.endpoint)(
+      target.prototype,
+      key,
+      {
+        value: entry.callback.func,
+      },
+    );
   }
 });
 
 export function GetDataControllerMeta(thisObj: any): DataAPIMeta {
-  return GetMetadata(Object.getPrototypeOf(thisObj).constructor, DataAPIMeta, true);
+  return GetMetadata(
+    Object.getPrototypeOf(thisObj).constructor,
+    DataAPIMeta,
+    true,
+  );
 }
 
 export namespace DefaultRoutes {
   class Methods {
-    async get(reqCtx: RequestContext, params: Parameters.GetParameters) {
+    async get(_reqCtx: RequestContext, params: Parameters.GetParameters) {
       const meta = GetDataControllerMeta(this);
 
       const model = Query.GetModel(this, meta);
@@ -117,10 +153,10 @@ export namespace DefaultRoutes {
       }
 
       const dbResult = model.constructor.fromDatabase(await query);
-      assert(dbResult, 404, 'Not Found');
+      assert(dbResult, 404, "Not Found");
       Validation.Unlock(this, meta, dbResult);
 
-      const results = await Query.ReadProperties(this, meta, dbResult, 'get');
+      const results = await Query.ReadProperties(this, meta, dbResult, "get");
 
       Validation.ClearInternal(meta, results);
 
@@ -132,15 +168,35 @@ export namespace DefaultRoutes {
 
       const model = Query.GetModel(this, meta);
       const sort = params?.sortKey
-        ? ([params.sortKey, params.sortDirection] as [string, 'asc' | 'desc' | undefined])
+        ? ([params.sortKey, params.sortDirection] as [
+            string,
+            "asc" | "desc" | undefined,
+          ])
         : undefined;
-      let [query, queryTotal] = Query.List(this, meta, model.table, reqCtx, sort, params?.filters);
+      let [query, queryTotal] = Query.List(
+        this,
+        meta,
+        model.table,
+        reqCtx,
+        sort,
+        params?.filters,
+      );
 
-      const pluck: Set<string> | undefined = meta.pluck[params.pluckMode ?? 'list'];
-      assert(params.noPluck || pluck, 400, `No fields found for pluckMode '${params.pluckMode ?? 'list'}'`);
+      const pluck: Set<string> | undefined =
+        meta.pluck[params.pluckMode ?? "list"];
+      assert(
+        params.noPluck || pluck,
+        400,
+        `No fields found for pluckMode '${params.pluckMode ?? "list"}'`,
+      );
 
       if (!params.noForeign) {
-        query = Query.Foreign(model.database, meta, query, params.noPluck ? undefined : pluck);
+        query = Query.Foreign(
+          model.database,
+          meta,
+          query,
+          params.noPluck ? undefined : pluck,
+        );
       }
 
       const offset = params.offset || 0;
@@ -148,7 +204,7 @@ export namespace DefaultRoutes {
       let queryPaged = query.slice(offset, limit);
 
       if (!params.noPluck && pluck) {
-        queryPaged = queryPaged.pluck('_internal', ...pluck);
+        queryPaged = queryPaged.pluck("_internal", ...pluck);
       }
 
       const [dbResult, dbTotal] = await Promise.all([queryPaged, queryTotal]);
@@ -157,7 +213,7 @@ export namespace DefaultRoutes {
         dbResult.map((entry) => {
           const entryInstance = model.constructor.fromDatabase(entry);
           Validation.Unlock(this, meta, entryInstance);
-          return Query.ReadProperties(this, meta, entryInstance, 'list');
+          return Query.ReadProperties(this, meta, entryInstance, "list");
         }),
       );
 
@@ -171,31 +227,39 @@ export namespace DefaultRoutes {
       };
     }
 
-    async new(reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) {
+    async new(
+      _reqCtx: RequestContext,
+      params: Parameters.NewParameters,
+      body: Buffer,
+    ) {
       const meta = GetDataControllerMeta(this);
 
       const data = JSON.parse(body.toString());
       if (!params.noMandatory) {
-        Validation.MandatoryFields(meta, data, 'new');
+        Validation.MandatoryFields(meta, data, "new");
       }
       await Validation.ValidateTypes(meta, data);
 
-      const dbData = await Query.WriteProperties(this, meta, data, 'new');
+      const dbData = await Query.WriteProperties(this, meta, data, "new");
       Validation.Lock(this, meta, dbData);
 
       const model = Query.GetModel(this, meta);
-      triggerEvent(dbData, 'insert');
+      triggerEvent(dbData, "insert");
       const dbResult = await model.table.insert(dbData);
 
       return dbResult;
     }
 
-    async edit(reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) {
+    async edit(
+      _reqCtx: RequestContext,
+      params: Parameters.EditParameters,
+      body: Buffer,
+    ) {
       const meta = GetDataControllerMeta(this);
 
       const data = JSON.parse(body.toString());
       if (!params.noMandatory) {
-        Validation.MandatoryFields(meta, data, 'edit');
+        Validation.MandatoryFields(meta, data, "edit");
       }
       await Validation.ValidateTypes(meta, data);
 
@@ -204,14 +268,20 @@ export namespace DefaultRoutes {
       const queryPrevious = Query.Get(model.table, params.id, params.index);
       const dbResultPrevious = await queryPrevious;
 
-      const dbData = await Query.WriteProperties(this, meta, data, 'edit', dbResultPrevious);
+      const dbData = await Query.WriteProperties(
+        this,
+        meta,
+        data,
+        "edit",
+        dbResultPrevious,
+      );
       Validation.Lock(this, meta, dbData);
 
-      triggerEvent(dbData, 'update');
+      triggerEvent(dbData, "update");
       await model.table.get(params.id).update(dbData);
     }
 
-    async delete(reqCtx: RequestContext, params: Parameters.DeleteParameters) {
+    async delete(_reqCtx: RequestContext, params: Parameters.DeleteParameters) {
       const meta = GetDataControllerMeta(this);
 
       const model = Query.GetModel(this, meta);
@@ -224,18 +294,30 @@ export namespace DefaultRoutes {
     }
   }
 
-  export const Get = { func: Methods.prototype.get, args: [Context(), Parameters.Get()], method: 'get' };
-  export const List = { func: Methods.prototype.list, args: [Context(), Parameters.List()], method: 'get' };
-  export const New = { func: Methods.prototype.new, args: [Context(), Parameters.New(), RawBody()], method: 'post' };
+  export const Get = {
+    func: Methods.prototype.get,
+    args: [Context(), Parameters.Get()],
+    method: "get",
+  };
+  export const List = {
+    func: Methods.prototype.list,
+    args: [Context(), Parameters.List()],
+    method: "get",
+  };
+  export const New = {
+    func: Methods.prototype.new,
+    args: [Context(), Parameters.New(), RawBody()],
+    method: "post",
+  };
   export const Edit = {
     func: Methods.prototype.edit,
     args: [Context(), Parameters.Edit(), RawBody()],
-    method: 'put',
+    method: "put",
   };
   export const Delete = {
     func: Methods.prototype.delete,
     args: [Context(), Parameters.Delete()],
-    method: 'delete',
+    method: "delete",
   };
 
   export const All = {
@@ -251,7 +333,7 @@ export namespace DefaultRoutes {
     options?: Partial<O>,
     endpoint?: string,
   ): DataControllerCallbackWithOptions<O> {
-    if ('func' in callback) {
+    if ("func" in callback) {
       return {
         endpoint,
         options,

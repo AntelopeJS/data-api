@@ -1,1 +1,1 @@
-export const schemaName = 'data-api-playground';
+export const schemaName = "data-api-playground";

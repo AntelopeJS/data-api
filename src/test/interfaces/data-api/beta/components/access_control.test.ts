@@ -1,22 +1,37 @@
-import { expect } from 'chai';
-import { Schema, SchemaInstance } from '@ajs/database/beta';
+import path from "node:path";
+import { Controller } from "@ajs/api/beta";
+import type { SchemaInstance } from "@ajs/database/beta";
 import {
-  Table,
-  Index,
-  RegisterTable,
-  CreateDatabaseSchemaInstance,
   BasicDataModel,
+  CreateDatabaseSchemaInstance,
+  Index,
   Model,
-} from '@ajs/database-decorators/beta';
-import { Controller } from '@ajs/api/beta';
-import { DataController, DefaultRoutes, RegisterDataController } from '@ajs.local/data-api/beta';
-import { Access, AccessMode, ModelReference } from '@ajs.local/data-api/beta/metadata';
-import { editRequest, getFunctionName, getRequest } from '../utils';
-import path from 'node:path';
+  RegisterTable,
+  Table,
+} from "@ajs/database-decorators/beta";
+import {
+  DataController,
+  DefaultRoutes,
+  RegisterDataController,
+} from "@ajs.local/data-api/beta";
+import {
+  Access,
+  AccessMode,
+  ModelReference,
+} from "@ajs.local/data-api/beta/metadata";
+import { expect } from "chai";
+import {
+  editRequest,
+  getFunctionName,
+  getRequest,
+  getSchemaInstance,
+} from "../utils";
 
-const currentTestName = path.basename(__filename).replace(/\.test\.(ts|js)$/, '');
+const currentTestName = path
+  .basename(__filename)
+  .replace(/\.test\.(ts|js)$/, "");
 const userTableName = `users-${currentTestName}`;
-const schemaName = 'default';
+const schemaName = "default";
 
 @RegisterTable(userTableName, schemaName)
 class User extends Table {
@@ -33,26 +48,30 @@ class UserModel extends BasicDataModel(User, userTableName) {}
 let database: SchemaInstance<any>;
 
 const defaultUserDataset: Partial<User> = {
-  name: 'Jean Test',
-  email: 'jean.test@email.com',
+  name: "Jean Test",
+  email: "jean.test@email.com",
   age: 30,
-  password: 'very-secure-qwerty123',
+  password: "very-secure-qwerty123",
 };
 
-describe('Field Access Control', () => {
-  it('read in a read write field', async () => await readInReadWriteField());
-  it('write in a read write field', async () => await writeInReadWriteField());
-  it('read in a write only field', async () => await readInWriteOnlyField());
-  it('write in a read only field', async () => await writeInReadOnlyField());
-  it('read in a read only field', async () => await readInReadOnlyField());
-  it('write in a write only field', async () => await writeInWriteOnlyField());
+describe("Field Access Control", () => {
+  it("read in a read write field", async () => await readInReadWriteField());
+  it("write in a read write field", async () => await writeInReadWriteField());
+  it("read in a write only field", async () => await readInWriteOnlyField());
+  it("write in a read only field", async () => await writeInReadOnlyField());
+  it("read in a read only field", async () => await readInReadOnlyField());
+  it("write in a write only field", async () => await writeInWriteOnlyField());
 
   after(async () => {});
 });
 
 async function _createDataController(testName: string, user: Partial<User>) {
   @RegisterDataController()
-  class _AccessTestAPI extends DataController(User, DefaultRoutes.All, Controller(`/${testName}`)) {
+  class _AccessTestAPI extends DataController(
+    User,
+    DefaultRoutes.All,
+    Controller(`/${testName}`),
+  ) {
     @ModelReference()
     @Model(UserModel)
     declare userModel: UserModel;
@@ -73,14 +92,17 @@ async function _createDataController(testName: string, user: Partial<User>) {
     declare email: string;
   }
   await CreateDatabaseSchemaInstance(schemaName);
-  database = Schema.get(schemaName)!.instance();
+  database = getSchemaInstance(schemaName);
   const userModel = new UserModel(database);
   const insertResult = await userModel.insert(user);
   return { id: insertResult[0], userModel };
 }
 
 async function readInReadWriteField() {
-  const { id } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
   const response = await getRequest(getFunctionName(), { id });
   expect(response.status).to.equal(200);
@@ -92,17 +114,27 @@ async function readInReadWriteField() {
 }
 
 async function writeInReadWriteField() {
-  const { id, userModel } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id, userModel } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
-  const replacementEmail = 'bob.test@email.com';
-  const response = await editRequest(getFunctionName(), { email: replacementEmail }, { id });
+  const replacementEmail = "bob.test@email.com";
+  const response = await editRequest(
+    getFunctionName(),
+    { email: replacementEmail },
+    { id },
+  );
   expect(response.status).to.equal(200);
   const user = await userModel.get(id);
   expect(user?.email).to.equal(replacementEmail);
 }
 
 async function readInWriteOnlyField() {
-  const { id } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
   const response = await getRequest(getFunctionName(), { id });
   expect(response.status).to.equal(200);
@@ -111,16 +143,26 @@ async function readInWriteOnlyField() {
 }
 
 async function writeInReadOnlyField() {
-  const { id, userModel } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id, userModel } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
-  const response = await editRequest(getFunctionName(), { age: (defaultUserDataset.age ?? 0) + 5 }, { id });
+  const response = await editRequest(
+    getFunctionName(),
+    { age: (defaultUserDataset.age ?? 0) + 5 },
+    { id },
+  );
   expect(response.status).to.equal(200);
   const user = await userModel.get(id);
   expect(user?.age).to.equal(defaultUserDataset.age);
 }
 
 async function readInReadOnlyField() {
-  const { id } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
   const response = await getRequest(getFunctionName(), { id });
   expect(response.status).to.equal(200);
@@ -129,10 +171,17 @@ async function readInReadOnlyField() {
 }
 
 async function writeInWriteOnlyField() {
-  const { id, userModel } = await _createDataController(getFunctionName(), defaultUserDataset);
+  const { id, userModel } = await _createDataController(
+    getFunctionName(),
+    defaultUserDataset,
+  );
 
-  const replacementPassword = 'new-password';
-  const response = await editRequest(getFunctionName(), { password: replacementPassword }, { id });
+  const replacementPassword = "new-password";
+  const response = await editRequest(
+    getFunctionName(),
+    { password: replacementPassword },
+    { id },
+  );
   expect(response.status).to.equal(200);
   const user = await userModel.get(id);
   expect(user?.password).to.equal(replacementPassword);

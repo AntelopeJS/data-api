@@ -1,9 +1,9 @@
-import { Class } from '@ajs/core/beta/decorators';
-import { RequestContext } from '@ajs/api/beta';
-import { ValueProxy, ValueProxyOrValue } from '@ajs/database/beta';
-import { DataControllerCallbackWithOptions } from '.';
-import { ContainerModifier } from '@ajs/database-decorators/beta/modifiers/common';
-import { Table } from '@ajs/database-decorators/beta';
+import type { RequestContext } from "@ajs/api/beta";
+import { type Class } from "@ajs/core/beta/decorators";
+import type { ValueProxy, ValueProxyOrValue } from "@ajs/database/beta";
+import { type Table } from "@ajs/database-decorators/beta";
+import type { ContainerModifier } from "@ajs/database-decorators/beta/modifiers/common";
+import type { DataControllerCallbackWithOptions } from ".";
 /**
  * Field access mode enum.
  */
@@ -47,7 +47,13 @@ export interface FieldData {
     /**
      * Foreign key reference.
      */
-    foreign?: [table: string, tableClass?: Class<Table>, index?: string, multi?: true, pluck?: string[]];
+    foreign?: [
+        table: string,
+        tableClass?: Class<Table>,
+        index?: string,
+        multi?: true,
+        pluck?: string[]
+    ];
     /**
      * Value validator callback.
      */
@@ -61,7 +67,7 @@ export interface FieldData {
      */
     indexable?: boolean;
 }
-type Comparison = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le';
+type Comparison = "eq" | "ne" | "gt" | "ge" | "lt" | "le";
 export type FilterValue = [value: string, mode: Comparison];
 /**
  * Filter callback.

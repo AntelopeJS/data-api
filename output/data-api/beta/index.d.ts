@@ -1,7 +1,7 @@
-import { Class, ParameterDecorator } from '@ajs/core/beta/decorators';
-import { RequestContext, ControllerClass } from '@ajs/api/beta';
-import { DataAPIMeta } from './metadata';
-import { Parameters } from './components';
+import { type ControllerClass, type RequestContext } from "@ajs/api/beta";
+import { type Class, type ParameterDecorator } from "@ajs/core/beta/decorators";
+import { Parameters } from "./components";
+import { DataAPIMeta } from "./metadata";
 export type DataControllerCallback<O = any> = {
     args: (ParameterDecorator | ParameterDecorator[])[];
     method: string;
@@ -12,7 +12,7 @@ export type DataControllerCallbackWithOptions<O = any> = {
     options?: Partial<O>;
     callback: DataControllerCallback<O>;
 };
-export type ExtractCallback<T> = T extends DataControllerCallbackWithOptions ? T['callback']['func'] : T extends DataControllerCallback ? T['func'] : never;
+export type ExtractCallback<T> = T extends DataControllerCallbackWithOptions ? T["callback"]["func"] : T extends DataControllerCallback ? T["func"] : never;
 export type DataControllerDef = {
     [name: string]: DataControllerCallback | DataControllerCallbackWithOptions;
 };
@@ -27,7 +27,7 @@ export declare const RegisterDataController: () => import("@ajs/core/beta/decora
 export declare function GetDataControllerMeta(thisObj: any): DataAPIMeta;
 export declare namespace DefaultRoutes {
     const Get: {
-        func: (reqCtx: RequestContext, params: Parameters.GetParameters) => Promise<Record<string, any>>;
+        func: (_reqCtx: RequestContext, params: Parameters.GetParameters) => Promise<Record<string, any>>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
@@ -42,23 +42,23 @@ export declare namespace DefaultRoutes {
         method: string;
     };
     const New: {
-        func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
+        func: (_reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
     const Edit: {
-        func: (reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) => Promise<void>;
+        func: (_reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) => Promise<void>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
     const Delete: {
-        func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
+        func: (_reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
         args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
         method: string;
     };
     const All: {
         readonly get: {
-            func: (reqCtx: RequestContext, params: Parameters.GetParameters) => Promise<Record<string, any>>;
+            func: (_reqCtx: RequestContext, params: Parameters.GetParameters) => Promise<Record<string, any>>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };
@@ -73,17 +73,17 @@ export declare namespace DefaultRoutes {
             method: string;
         };
         readonly new: {
-            func: (reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
+            func: (_reqCtx: RequestContext, params: Parameters.NewParameters, body: Buffer) => Promise<string[]>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };
         readonly edit: {
-            func: (reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) => Promise<void>;
+            func: (_reqCtx: RequestContext, params: Parameters.EditParameters, body: Buffer) => Promise<void>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };
         readonly delete: {
-            func: (reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
+            func: (_reqCtx: RequestContext, params: Parameters.DeleteParameters) => Promise<number>;
             args: (import("@ajs/core/beta/decorators").PropertyDecorator & ParameterDecorator)[];
             method: string;
         };

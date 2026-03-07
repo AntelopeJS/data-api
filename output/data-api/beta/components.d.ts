@@ -1,7 +1,7 @@
-import { RequestContext } from '@ajs/api/beta';
-import { Datum, Stream, Table, ValueProxy, SchemaInstance } from '@ajs/database/beta';
-import { DataModel } from '@ajs/database-decorators/beta/model';
-import { DataAPIMeta, FilterValue } from './metadata';
+import { type RequestContext } from "@ajs/api/beta";
+import { type Datum, type SchemaInstance, Stream, type Table, type ValueProxy } from "@ajs/database/beta";
+import type { DataModel } from "@ajs/database-decorators/beta/model";
+import type { DataAPIMeta, FilterValue } from "./metadata";
 export declare namespace Parameters {
     export function GetOptionOverrides<T extends Record<string, any>>(reqCtx: RequestContext): T;
     export function ExtractFilters(reqCtx: RequestContext, meta: DataAPIMeta): Record<string, FilterValue>;
@@ -21,7 +21,7 @@ export declare namespace Parameters {
         offset?: number;
         limit?: number;
         sortKey?: string;
-        sortDirection?: 'asc' | 'desc';
+        sortDirection?: "asc" | "desc";
         maxPage?: number;
         noForeign?: boolean;
         noPluck?: boolean;
@@ -59,7 +59,7 @@ export declare namespace Query {
     function ReadProperties(obj: any, meta: DataAPIMeta, dbData: any, action?: string, onlyList?: boolean): Promise<Record<string, any>>;
     function WriteProperties(obj: any, meta: DataAPIMeta, bodyData: Record<string, any>, action?: string, existingDBData?: Record<string, any>): Promise<Record<string, any>>;
     function Get(table: Table<any>, id: string | ValueProxy<string>, index?: string): Datum<any>;
-    function List<T extends Record<string, any>>(obj: any, meta: DataAPIMeta, request: Table<T>, reqCtx: RequestContext, sorting?: [string, 'asc' | 'desc' | undefined], filters?: Record<string, FilterValue>): [sorted: Stream<T>, total: Datum<number>];
+    function List<T extends Record<string, any>>(obj: any, meta: DataAPIMeta, request: Table<T>, reqCtx: RequestContext, sorting?: [string, "asc" | "desc" | undefined], filters?: Record<string, FilterValue>): [sorted: Stream<T>, total: Datum<number>];
     function Delete(table: Table<any>, id: string | string[]): import("@ajs/database/beta").Query<number>;
 }
 export declare namespace Validation {

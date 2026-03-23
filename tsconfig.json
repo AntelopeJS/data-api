@@ -20,10 +20,6 @@
     "sourceMap": true,
     "useDefineForClassFields": true,
     "baseUrl": "src",
-    "paths": {
-      "@ajs.local/*": ["interfaces/*"],
-      "@ajs/*": ["interfaces/*"]
-    },
     "rootDir": "src"
   },
   "include": ["src/**/*.ts"]

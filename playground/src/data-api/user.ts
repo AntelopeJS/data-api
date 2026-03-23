@@ -1,9 +1,9 @@
-import { Controller } from "@ajs/api/beta";
+import { Controller } from "@antelopejs/interface-api";
 import {
   DataController,
   DefaultRoutes,
   RegisterDataController,
-} from "@ajs/data-api/beta";
+} from "@antelopejs/interface-data-api";
 import {
   Access,
   AccessMode,
@@ -11,8 +11,8 @@ import {
   Mandatory,
   ModelReference,
   Sortable,
-} from "@ajs/data-api/beta/metadata";
-import { Model } from "@ajs/database-decorators/beta";
+} from "@antelopejs/interface-data-api/metadata";
+import { Model } from "@antelopejs/interface-database-decorators";
 import { User, UserModel } from "../db/user";
 
 const routes = {

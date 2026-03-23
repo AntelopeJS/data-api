@@ -24,47 +24,41 @@
   "packageManager": "pnpm@10.6.5",
   "scripts": {
     "build": "rimraf dist && tsc",
-    "dev:prepare": "cd playground && ajs module imports install",
     "dev": "ajs project run -w -p playground",
     "format": "biome format --write .",
-    "generate": "ajs module exports generate",
     "lint:fix": "biome check --write .",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit",
     "prepack": "pnpm run build",
-    "prepare": "ajs module imports install",
     "release": "pnpm run lint && pnpm run test && pnpm run prepack && release-it",
     "test": "pnpm run build && ajs module test"
   },
   "antelopeJs": {
-    "exportsPath": "dist/interfaces",
-    "imports": [
-      "api@beta",
-      "database@beta",
-      "database-decorators@beta",
-      "core@beta",
-      "api-util@beta"
+    "implements": [
+      "@antelopejs/interface-data-api"
     ],
-    "importsOptional": [],
-    "test": {
-      "project": "src/test/antelope.test.js",
-      "folder": "dist/test"
-    }
+    "test": "src/test/antelope.test.ts"
   },
   "dependencies": {
+    "@antelopejs/interface-core": "^0.0.2",
+    "@antelopejs/interface-api": "^0.0.2",
+    "@antelopejs/interface-data-api": "^0.0.2",
+    "@antelopejs/interface-database": "^0.0.2",
+    "@antelopejs/interface-database-decorators": "^0.0.2",
     "chai": "^4.5.0",
     "mocha": "^11.7.1",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.2",
-    "rimraf": "^6.0.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.14.1",
     "mongodb-memory-server-core": "^10.1.4",
-    "release-it": "^19.0.2",
+    "release-it": "^19.2.4",
     "release-it-changelogen": "^0.1.0",
-    "typescript": "^5.8.3"
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3",
+    "@types/semver": "^7.7.0"
   }
 }

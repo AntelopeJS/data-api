@@ -1,4 +1,4 @@
-import { CreateDatabaseSchemaInstance } from "@ajs/database-decorators/beta";
+import { CreateDatabaseSchemaInstance } from "@antelopejs/interface-database-decorators";
 import { schemaName } from "./utils";
 import "./db/user";
 import "./data-api/user";

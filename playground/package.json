@@ -15,38 +15,19 @@
     "typescript": "^5.8.3"
   },
   "antelopeJs": {
-    "imports": [
-      {
-        "name": "api@beta",
-        "skipInstall": true
-      },
-      {
-        "name": "core@beta",
-        "skipInstall": true
-      },
-      {
-        "name": "data-api@beta",
-        "skipInstall": true
-      },
-      {
-        "name": "database-decorators@beta",
-        "skipInstall": true
-      },
-      {
-        "name": "database@beta",
-        "skipInstall": true
-      },
-      "logging@beta"
-    ],
     "baseUrl": "dist",
     "paths": {
       "@/*": [
         "*"
       ]
-    },
-    "importsOptional": []
+    }
   },
   "dependencies": {
+    "@antelopejs/interface-api": "^0.0.2",
+    "@antelopejs/interface-core": "^0.0.2",
+    "@antelopejs/interface-data-api": "^0.0.2",
+    "@antelopejs/interface-database": "^0.0.2",
+    "@antelopejs/interface-database-decorators": "^0.0.2",
     "uuid": "^11.1.0",
     "ws": "^8.18.0"
   }

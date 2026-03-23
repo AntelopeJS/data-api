@@ -4,7 +4,7 @@ import {
   Index,
   RegisterTable,
   Table,
-} from "@ajs/database-decorators/beta";
+} from "@antelopejs/interface-database-decorators";
 import { schemaName } from "../utils";
 
 const tableName = "users";

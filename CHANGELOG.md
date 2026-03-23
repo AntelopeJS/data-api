@@ -1,5 +1,54 @@
 # Changelog
 
+## v1.0.0
+
+[compare changes](https://github.com/AntelopeJS/data-api/compare/v0.1.0...v1.0.0)
+
+### 🚀 Enhancements
+
+- Use db index in relevant filters ([#14](https://github.com/AntelopeJS/data-api/pull/14))
+- Async validators ([7c84de9](https://github.com/AntelopeJS/data-api/commit/7c84de9))
+- Add per-action access control overrides ([#19](https://github.com/AntelopeJS/data-api/pull/19))
+- Migrate to new database schema API (AQL2) ([#20](https://github.com/AntelopeJS/data-api/pull/20))
+
+### 🩹 Fixes
+
+- Array of foreign keys ([#12](https://github.com/AntelopeJS/data-api/pull/12))
+- Dont assign prototype to null foreign objects ([539cf0a](https://github.com/AntelopeJS/data-api/commit/539cf0a))
+- Linting ([b6d8928](https://github.com/AntelopeJS/data-api/commit/b6d8928))
+- Playground startup errors ([#16](https://github.com/AntelopeJS/data-api/pull/16))
+- Remove all non-null assertions to fix noNonNullAssertion lint warnings ([#21](https://github.com/AntelopeJS/data-api/pull/21))
+
+### 💅 Refactors
+
+- Use assert from api-util interface ([6f210ff](https://github.com/AntelopeJS/data-api/commit/6f210ff))
+- Rename StaticModel to Model decorator ([aa0bad3](https://github.com/AntelopeJS/data-api/commit/aa0bad3))
+- Remove primary index decorator from User, Customer, Product, Order, and OrderItem classes ([d70be0f](https://github.com/AntelopeJS/data-api/commit/d70be0f))
+- **test:** Use global database instance in all test files ([45ebe57](https://github.com/AntelopeJS/data-api/commit/45ebe57))
+
+### 📦 Build
+
+- Replace rm -rf with rimraf ([#13](https://github.com/AntelopeJS/data-api/pull/13))
+
+### 🏡 Chore
+
+- Replicate ai agent config files (.agents/.claude) ([#17](https://github.com/AntelopeJS/data-api/pull/17))
+- Remove ci publish strict ts interface tests ([#18](https://github.com/AntelopeJS/data-api/pull/18))
+- Simplify CI workflow triggers and update AGENTS.md ([8607104](https://github.com/AntelopeJS/data-api/commit/8607104))
+- Migrate from local beta interfaces to published @antelopejs packages ([c6d2dbc](https://github.com/AntelopeJS/data-api/commit/c6d2dbc))
+
+### 🤖 CI
+
+- Remove test:coverage step from CI workflow ([2138d35](https://github.com/AntelopeJS/data-api/commit/2138d35))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli <upd4ting@gmail.com>
+- MrSociety404 <fabrice@altab.be>
+- Glastis ([@Glastis](http://github.com/Glastis))
+- Thomasims <thomas@antelopejs.com>
+- Thomas ([@Thomasims](http://github.com/Thomasims))
+
 ## v0.1.0
 
 [compare changes](https://github.com/AntelopeJS/data-api/compare/v0.0.1...v0.1.0)

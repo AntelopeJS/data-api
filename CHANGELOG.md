@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.1
+
+[compare changes](https://github.com/AntelopeJS/data-api/compare/v1.0.0...v1.0.1)
+
+### 💅 Refactors
+
+- Switch playground and test modules from local to npm packages ([37fe458](https://github.com/AntelopeJS/data-api/commit/37fe458))
+
+### 🏡 Chore
+
+- Update dependencies ([39f48d7](https://github.com/AntelopeJS/data-api/commit/39f48d7))
+- Update @antelopejs interface packages and mongodb test module ([9adbfcb](https://github.com/AntelopeJS/data-api/commit/9adbfcb))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli <upd4ting@gmail.com>
+
 ## v1.0.0
 
 [compare changes](https://github.com/AntelopeJS/data-api/compare/v0.1.0...v1.0.0)

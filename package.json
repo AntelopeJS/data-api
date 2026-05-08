@@ -40,11 +40,11 @@
     "test": "src/test/antelope.test.ts"
   },
   "dependencies": {
-    "@antelopejs/interface-api": "^0.0.2",
-    "@antelopejs/interface-core": "^0.0.2",
-    "@antelopejs/interface-data-api": "^0.0.2",
-    "@antelopejs/interface-database": "^0.0.2",
-    "@antelopejs/interface-database-decorators": "^0.0.2",
+    "@antelopejs/interface-api": "^0.0.3",
+    "@antelopejs/interface-core": "^0.0.3",
+    "@antelopejs/interface-data-api": "^0.0.5",
+    "@antelopejs/interface-database": "^0.0.4",
+    "@antelopejs/interface-database-decorators": "^0.0.4",
     "chai": "^4.5.0",
     "mocha": "^11.7.5",
     "reflect-metadata": "^0.2.2"
